@@ -6,23 +6,7 @@ import './index.css';
 import { generateAnnualData, generateMonthlyData } from '../../../mock/modules/schedule';
 
 const LLMChatPanel = ({ collapsed, onToggle }) => {
-	const { 
-		chatMessages, 
-		setChatMessages, 
-		sendChatMessage, 
-		currentYear, 
-		setCurrentYear, 
-		currentMonth, 
-		setCurrentMonth, 
-		currentView, 
-		setCurrentView,
-		annualData,
-		setAnnualData,
-		monthlyData,
-		setMonthlyData,
-		transformAnnualData,
-		transformMonthlyData
-	} = useContext(ScheduleContext);
+	const { chatMessages, setChatMessages, sendChatMessage, currentYear, setCurrentYear, currentMonth, setCurrentMonth, currentView, setCurrentView, annualData, setAnnualData, monthlyData, setMonthlyData, transformAnnualData, transformMonthlyData } = useContext(ScheduleContext);
 	const inputRef = useRef(null);
 	const messagesEndRef = useRef(null);
 	const [isThinking, setIsThinking] = useState(false);
