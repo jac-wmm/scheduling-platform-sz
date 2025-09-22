@@ -1,0 +1,216 @@
+/* 表格高亮与视图样式 */
+.highlight-row {
+	background-color: #e3f2fd !important;
+}
+
+.highlight-column {
+	background-color: #e3f2fd !important;
+}
+
+.highlight-cell {
+	background-color: #bbdefb !important;
+}
+
+.view-annual,
+.view-monthly {
+	font-size: 12px;
+	border-collapse: collapse;
+	border-spacing: 0 !important;
+	white-space: nowrap;
+}
+
+.view-annual th,
+.view-annual td,
+.view-monthly th,
+.view-monthly td {
+	border: 1px solid #ddd;
+	padding: 2px;
+	text-align: center;
+}
+
+.view-annual td,
+.view-monthly td {
+	cursor: pointer;
+	padding: 1px 0;
+}
+
+.view-annual thead th {
+	background-color: #e8eaf6;
+	position: sticky;
+	top: 0;
+	z-index: 10;
+	font-weight: normal;
+}
+
+.view-annual td {
+	height: 25px;
+	box-sizing: border-box;
+}
+
+.view-annual .sticky-col {
+	position: sticky;
+	background-color: #fff;
+	vertical-align: middle;
+}
+
+.view-annual .sticky-col-1 {
+	left: 0;
+	z-index: 14;
+	min-width: 60px;
+}
+
+.view-annual .sticky-col-2 {
+	left: 60px;
+	z-index: 13;
+	min-width: 50px;
+}
+
+.view-annual .sticky-col-3 {
+	left: 110px;
+	z-index: 12;
+	box-shadow: 3px 0 5px -2px rgba(0, 0, 0, 0.1);
+	min-width: 70px;
+}
+
+.view-annual .sticky-corner {
+	position: sticky;
+	top: 0;
+	z-index: 15;
+	background-color: #e8eaf6;
+}
+
+.view-annual .month-header.drill-down {
+	cursor: pointer;
+	text-decoration: underline;
+	color: #3f51b5;
+}
+
+.view-annual .month-header.drill-down:hover {
+	background-color: #c5cae9;
+}
+
+.view-monthly table {
+	width: 100%;
+}
+
+.view-monthly thead th {
+	background-color: #e8eaf6;
+	position: sticky;
+	top: 0;
+	z-index: 2;
+}
+
+.view-monthly tbody th:first-child {
+	position: sticky;
+	left: 0;
+	background-color: #f1f3f5;
+	z-index: 3;
+	min-width: 50px;
+}
+
+.view-monthly .weekend {
+	background-color: #f5f5f5;
+}
+
+.summary-col {
+	background-color: #f1f3f5;
+	font-weight: bold;
+	min-width: 30px;
+}
+
+thead .summary-col {
+	background-color: #e8eaf6;
+}
+
+/* 任务高亮颜色定义 */
+td.highlight-task-均衡修 {
+	background-color: rgba(121, 134, 203, 0.2);
+}
+
+td.highlight-task-专项修 {
+	background-color: rgba(255, 183, 77, 0.2);
+}
+
+td.highlight-task-特别修 {
+	background-color: rgba(77, 182, 172, 0.2);
+}
+
+/* 具体单元格高亮颜色定义 */
+td.highlight-specific-均衡修 {
+	background-color: rgba(121, 134, 203, 0.4) !important;
+}
+
+td.highlight-specific-专项修 {
+	background-color: rgba(255, 183, 77, 0.4) !important;
+}
+
+td.highlight-specific-特别修 {
+	background-color: rgba(77, 182, 172, 0.4) !important;
+}
+
+/* 在文件末尾添加以下CSS规则 */
+/* 为月视图表格的日期列设置固定宽度 */
+.view-monthly th[data-day-col],
+.view-monthly td[data-vehicle] {
+	min-width: 40px; /* 设置最小宽度 */
+	width: 40px; /* 设置固定宽度 */
+}
+
+/* 确保表格内容不会导致列宽变化 */
+.view-monthly {
+	table-layout: fixed; /* 固定表格布局，所有列宽由CSS决定 */
+	width: 100%; /* 表格宽度占满容器 */
+}
+
+/* 调整单元格内容溢出处理 */
+.view-monthly td {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* 自定义Tooltip样式 - 简化版 */
+.custom-tooltip {
+  position: fixed; /* 使用fixed而不是absolute，这样是相对于视口定位 */
+  background-color: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: normal;
+  word-break: break-word;
+  pointer-events: none;
+  z-index: 10000; /* 使用更高的z-index确保显示在最上层 */
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease-out;
+  max-width: 200px;
+}
+
+/* 去掉箭头，简化样式 */
+.custom-tooltip.show {
+	opacity: 1;
+	visibility: visible;
+}
+
+/* Tooltip箭头 - 默认显示在下方 */
+.custom-tooltip::after {
+	content: '';
+	position: absolute;
+	top: 100%;
+	left: 50%;
+	margin-left: -5px;
+	margin-top: -1px; /* 微调以改善视觉效果 */
+	border-width: 5px;
+	border-style: solid;
+	border-color: rgba(0, 0, 0, 0.9) transparent transparent transparent;
+}
+
+/* 当tooltip显示在上方时调整箭头方向 */
+.custom-tooltip:not(.bottom)::after {
+	top: auto;
+	bottom: 100%;
+	border-color: transparent transparent rgba(0, 0, 0, 0.9) transparent;
+	margin-top: 0;
+	margin-bottom: -1px;
+}

@@ -1,0 +1,270 @@
+/* LLM聊天面板样式 */
+#llm-chat-panel {
+	width: 320px;
+	flex-shrink: 0;
+	display: flex;
+	flex-direction: column;
+	background-color: #fff;
+	border-radius: 8px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	transition: all 0.3s ease-in-out;
+	transform: translateX(0);
+}
+
+#llm-chat-panel.collapsed {
+	width: 0;
+	padding: 0;
+	opacity: 0;
+	transform: translateX(100%);
+}
+
+#chat-toggle-tab {
+	position: absolute;
+	top: 50%;
+	right: 25px;
+	transform: translateY(-50%) translateX(100%);
+	width: 25px;
+	padding: 15px 0;
+	background-color: #3f51b5;
+	color: white;
+	border-radius: 8px 0 0 8px;
+	cursor: pointer;
+	writing-mode: vertical-rl;
+	text-orientation: mixed;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 14px;
+	z-index: 20;
+	opacity: 1;
+	transition: all 0.3s ease-in-out;
+	visibility: visible;
+}
+
+#llm-chat-panel.collapsed + #chat-toggle-tab {
+	opacity: 1;
+	transform: translateY(-50%) translateX(0);
+	visibility: visible;
+	right: 0;
+}
+
+#chat-header {
+	padding: 10px;
+	font-size: 1.1em;
+	color: #1a237e;
+	border-bottom: 1px solid #c5cae9;
+	flex-shrink: 0;
+	font-weight: bold;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+#chat-help-btn {
+	background: none;
+	border: 1px solid #c5cae9;
+	color: #3f51b5;
+	border-radius: 50%;
+	width: 24px;
+	height: 24px;
+	cursor: pointer;
+	font-size: 14px;
+	font-weight: bold;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: background-color 0.2s;
+}
+
+#chat-help-btn:hover {
+	background-color: #e8eaf6;
+}
+
+#chat-messages {
+	flex-grow: 1;
+	padding: 10px;
+	overflow-y: auto;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.chat-message {
+	max-width: 85%;
+	padding: 8px 12px;
+	border-radius: 15px;
+	line-height: 1.5;
+	font-size: 14px;
+	word-wrap: break-word;
+}
+
+.chat-message.user {
+	background-color: #3f51b5;
+	color: white;
+	border-bottom-right-radius: 3px;
+	align-self: flex-end;
+}
+
+.chat-message.model {
+	background-color: #f1f3f5;
+	color: #333;
+	border-bottom-left-radius: 3px;
+	align-self: flex-start;
+}
+
+#chat-input-container {
+	border-top: 1px solid #ddd;
+	padding: 10px;
+	flex-shrink: 0;
+	background-color: #fcfdff;
+}
+
+#chat-input-form {
+	display: flex;
+	gap: 5px;
+}
+
+#chat-input {
+	flex-grow: 1;
+	background: white;
+	border: 1px solid #ccc;
+	border-radius: 15px;
+	padding: 0 12px;
+	font-size: 14px;
+	color: #333; /* 添加明确的文字颜色 */
+}
+
+#chat-input:focus {
+	outline: none;
+	border-color: #3f51b5;
+}
+
+#chat-send-btn,
+#chat-upload-btn {
+	background: none;
+	border: 1px solid #c5cae9;
+	color: #3f51b5;
+	border-radius: 50%;
+	width: 32px;
+	height: 32px;
+	cursor: pointer;
+	font-size: 16px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: background-color 0.2s;
+}
+
+#chat-send-btn:hover,
+#chat-upload-btn:hover {
+	background-color: #e8eaf6;
+}
+
+/* 添加思考指示器动画效果 */
+.chat-message.model .thinking-indicator {
+	display: flex;
+	align-items: center;
+}
+
+.chat-message.model .dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background-color: #9fa8da;
+	margin: 0 2px;
+	animation: bounce 1.4s infinite ease-in-out both;
+}
+
+.dot:nth-child(1) {
+	animation-delay: -0.32s;
+}
+.dot:nth-child(2) {
+	animation-delay: -0.16s;
+}
+
+@keyframes bounce {
+	0%,
+	80%,
+	100% {
+		transform: scale(0);
+	}
+	40% {
+		transform: scale(1);
+	}
+}
+
+/* 禁用状态样式 */
+#chat-input:disabled {
+	background-color: #f5f5f5;
+	cursor: not-allowed;
+}
+
+#chat-send-btn:disabled,
+#chat-upload-btn:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+#chat-send-btn:disabled:hover,
+#chat-upload-btn:disabled:hover {
+	background-color: transparent;
+}
+
+.canvas-card {
+	background-color: #fff;
+	border: 1px solid #ddd;
+	border-radius: 8px;
+	padding: 10px;
+	margin-top: 5px;
+	cursor: pointer;
+	transition: all 0.2s;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+.canvas-card:hover {
+	border-color: #3f51b5;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+.canvas-header {
+	font-weight: bold;
+	color: #1a237e;
+	margin-bottom: 5px;
+	display: flex;
+	align-items: center;
+	gap: 5px;
+}
+.canvas-details {
+	font-size: 12px;
+	color: #666;
+}
+/* 应用画布动画效果 */
+#app-container.applying-canvas-animation::after {
+	content: '';
+	position: fixed;
+	z-index: 2000;
+	left: 50%;
+	top: 50%;
+	width: 100px;
+	height: 100px;
+	background-image: url('data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22%25233f51b5%22%3E%3Cpath%20d%3D%22M0%200h24v24H0V0z%22%20fill%3D%22none%22%2F%3E%3Cpath%20d%3D%22M14%202H6c-1.1%200-1.99.9-1.99%202L4%2020c0%201.1.89%202%201.99%202H18c1.1%200%202-.9%202-2V8l-6-6zm2%2016H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5%209H13z%22%2F%3E%3C%2Fsvg%3E');
+	background-size: contain;
+	background-repeat: no-repeat;
+	opacity: 0;
+	animation: fly-and-fade 1s ease-out forwards;
+}
+
+@keyframes fly-and-fade {
+	0% {
+		transform: translate(-50%, -50%) scale(0.5);
+		opacity: 1;
+	}
+	100% {
+		transform: translate(-200%, -200%) scale(1.5);
+		opacity: 0;
+	}
+}
+
+/* 已应用的卡片样式 */
+.canvas-card.applied {
+	opacity: 0.8;
+	cursor: default;
+}

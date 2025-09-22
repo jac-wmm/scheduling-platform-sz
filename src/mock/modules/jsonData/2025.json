@@ -1,0 +1,738 @@
+[
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1101,
+        "taskType": "均衡修",
+        "taskCode": "J11",
+        "manHours": 8
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1102,
+        "taskType": "均衡修",
+        "taskCode": "J4",
+        "manHours": 8
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1103,
+        "taskType": "均衡修",
+        "taskCode": "J4",
+        "manHours": 8
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1104,
+        "taskType": "均衡修",
+        "taskCode": "J5",
+        "manHours": 8
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1105,
+        "taskType": "均衡修",
+        "taskCode": "J4",
+        "manHours": 8
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1106,
+        "taskType": "均衡修",
+        "taskCode": "J5",
+        "manHours": 8
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1107,
+        "taskType": "均衡修",
+        "taskCode": "J5",
+        "manHours": 8
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1108,
+        "taskType": "均衡修",
+        "taskCode": "J4",
+        "manHours": 8
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1109,
+        "taskType": "均衡修",
+        "taskCode": "J5",
+        "manHours": 8
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1110,
+        "taskType": "均衡修",
+        "taskCode": "J5",
+        "manHours": 8
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1111,
+        "taskType": "均衡修",
+        "taskCode": "J5",
+        "manHours": 8
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1112,
+        "taskType": "均衡修",
+        "taskCode": "J5",
+        "manHours": 8
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1113,
+        "taskType": "均衡修",
+        "taskCode": "J4",
+        "manHours": 8
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1114,
+        "taskType": "均衡修",
+        "taskCode": "J5",
+        "manHours": 8
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1115,
+        "taskType": "均衡修",
+        "taskCode": "J5",
+        "manHours": 8
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1116,
+        "taskType": "均衡修",
+        "taskCode": "J5",
+        "manHours": 8
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1117,
+        "taskType": "均衡修",
+        "taskCode": "J3",
+        "manHours": 8
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1118,
+        "taskType": "均衡修",
+        "taskCode": "J4",
+        "manHours": 8
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1119,
+        "taskType": "均衡修",
+        "taskCode": "J3",
+        "manHours": 8
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1120,
+        "taskType": "均衡修",
+        "taskCode": "J5",
+        "manHours": 8
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1121,
+        "taskType": "均衡修",
+        "taskCode": "J3",
+        "manHours": 8
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1122,
+        "taskType": "均衡修",
+        "taskCode": "J3",
+        "manHours": 8
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1123,
+        "taskType": "均衡修",
+        "taskCode": "J3",
+        "manHours": 8
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1124,
+        "taskType": "均衡修",
+        "taskCode": "J5",
+        "manHours": 8
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1125,
+        "taskType": "均衡修",
+        "taskCode": "J3",
+        "manHours": 8
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1126,
+        "taskType": "均衡修",
+        "taskCode": "J3",
+        "manHours": 8
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1127,
+        "taskType": "均衡修",
+        "taskCode": "J3",
+        "manHours": 8
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1128,
+        "taskType": "均衡修",
+        "taskCode": "J3",
+        "manHours": 8
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1129,
+        "taskType": "均衡修",
+        "taskCode": "J3",
+        "manHours": 8
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1130,
+        "taskType": "均衡修",
+        "taskCode": "J3",
+        "manHours": 8
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1131,
+        "taskType": "均衡修",
+        "taskCode": "J2",
+        "manHours": 8
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1132,
+        "taskType": "均衡修",
+        "taskCode": "J12",
+        "manHours": 8
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1133,
+        "taskType": "均衡修",
+        "taskCode": "J12",
+        "manHours": 8
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1134,
+        "taskType": "均衡修",
+        "taskCode": "J12",
+        "manHours": 8
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1135,
+        "taskType": "均衡修",
+        "taskCode": "J11",
+        "manHours": 8
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1102,
+        "taskType": "专项修",
+        "taskCode": "Z2",
+        "manHours": 10
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1106,
+        "taskType": "专项修",
+        "taskCode": "Z4",
+        "manHours": 7
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1107,
+        "taskType": "专项修",
+        "taskCode": "Z1",
+        "manHours": 3
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1108,
+        "taskType": "专项修",
+        "taskCode": "Z6",
+        "manHours": 6
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1109,
+        "taskType": "专项修",
+        "taskCode": "Z4",
+        "manHours": 7
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1110,
+        "taskType": "专项修",
+        "taskCode": "Z1",
+        "manHours": 3
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1111,
+        "taskType": "专项修",
+        "taskCode": "Z2",
+        "manHours": 10
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1112,
+        "taskType": "专项修",
+        "taskCode": "Z5",
+        "manHours": 4
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1113,
+        "taskType": "专项修",
+        "taskCode": "Z5",
+        "manHours": 4
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1114,
+        "taskType": "专项修",
+        "taskCode": "Z1",
+        "manHours": 3
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1115,
+        "taskType": "专项修",
+        "taskCode": "Z1",
+        "manHours": 3
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1116,
+        "taskType": "专项修",
+        "taskCode": "Z1",
+        "manHours": 3
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1117,
+        "taskType": "专项修",
+        "taskCode": "Z1",
+        "manHours": 3
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1118,
+        "taskType": "专项修",
+        "taskCode": "Z1",
+        "manHours": 3
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1119,
+        "taskType": "专项修",
+        "taskCode": "Z1",
+        "manHours": 3
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1120,
+        "taskType": "专项修",
+        "taskCode": "Z2",
+        "manHours": 10
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1121,
+        "taskType": "专项修",
+        "taskCode": "Z1",
+        "manHours": 3
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1122,
+        "taskType": "专项修",
+        "taskCode": "Z1",
+        "manHours": 3
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1123,
+        "taskType": "专项修",
+        "taskCode": "Z1",
+        "manHours": 3
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1124,
+        "taskType": "专项修",
+        "taskCode": "Z1",
+        "manHours": 3
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1125,
+        "taskType": "专项修",
+        "taskCode": "Z4",
+        "manHours": 7
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1131,
+        "taskType": "专项修",
+        "taskCode": "Z1",
+        "manHours": 3
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1101,
+        "taskType": "特别修",
+        "taskCode": "T1",
+        "manHours": 4
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1102,
+        "taskType": "特别修",
+        "taskCode": "T2",
+        "manHours": 6
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1103,
+        "taskType": "特别修",
+        "taskCode": "T2",
+        "manHours": 6
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1104,
+        "taskType": "特别修",
+        "taskCode": "T3",
+        "manHours": 12
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1105,
+        "taskType": "特别修",
+        "taskCode": "T2",
+        "manHours": 6
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1106,
+        "taskType": "特别修",
+        "taskCode": "T3",
+        "manHours": 12
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1107,
+        "taskType": "特别修",
+        "taskCode": "T3",
+        "manHours": 12
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1108,
+        "taskType": "特别修",
+        "taskCode": "T1",
+        "manHours": 4
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1109,
+        "taskType": "特别修",
+        "taskCode": "T1",
+        "manHours": 4
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1110,
+        "taskType": "特别修",
+        "taskCode": "T1",
+        "manHours": 4
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1111,
+        "taskType": "特别修",
+        "taskCode": "T1",
+        "manHours": 4
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1112,
+        "taskType": "特别修",
+        "taskCode": "T1",
+        "manHours": 4
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1113,
+        "taskType": "特别修",
+        "taskCode": "T1",
+        "manHours": 4
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1114,
+        "taskType": "特别修",
+        "taskCode": "T2",
+        "manHours": 6
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1115,
+        "taskType": "特别修",
+        "taskCode": "T1",
+        "manHours": 4
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1116,
+        "taskType": "特别修",
+        "taskCode": "T1",
+        "manHours": 4
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1117,
+        "taskType": "特别修",
+        "taskCode": "T1",
+        "manHours": 4
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1118,
+        "taskType": "特别修",
+        "taskCode": "T3",
+        "manHours": 12
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1119,
+        "taskType": "特别修",
+        "taskCode": "T1",
+        "manHours": 4
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1120,
+        "taskType": "特别修",
+        "taskCode": "T1",
+        "manHours": 4
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1121,
+        "taskType": "特别修",
+        "taskCode": "T2",
+        "manHours": 6
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1122,
+        "taskType": "特别修",
+        "taskCode": "T2",
+        "manHours": 6
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1123,
+        "taskType": "特别修",
+        "taskCode": "T2",
+        "manHours": 6
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1124,
+        "taskType": "特别修",
+        "taskCode": "T1",
+        "manHours": 4
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1125,
+        "taskType": "特别修",
+        "taskCode": "T1",
+        "manHours": 4
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1126,
+        "taskType": "特别修",
+        "taskCode": "T1",
+        "manHours": 4
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1127,
+        "taskType": "特别修",
+        "taskCode": "T1",
+        "manHours": 4
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1128,
+        "taskType": "特别修",
+        "taskCode": "T1",
+        "manHours": 4
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1129,
+        "taskType": "特别修",
+        "taskCode": "T2",
+        "manHours": 6
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1130,
+        "taskType": "特别修",
+        "taskCode": "T2",
+        "manHours": 6
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1131,
+        "taskType": "特别修",
+        "taskCode": "T1",
+        "manHours": 4
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1132,
+        "taskType": "特别修",
+        "taskCode": "T1",
+        "manHours": 4
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1133,
+        "taskType": "特别修",
+        "taskCode": "T1",
+        "manHours": 4
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1134,
+        "taskType": "特别修",
+        "taskCode": "T1",
+        "manHours": 4
+    },
+    {
+        "year": 2025,
+        "month": 0,
+        "vehicle": 1135,
+        "taskType": "特别修",
+        "taskCode": "T1",
+        "manHours": 4
+    }
+]

@@ -1,0 +1,1550 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>交互式智能排程平台</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+    <style>
+        /* 1. 基础布局 */
+        html, body {
+            margin: 0; padding: 0; height: 100%; width: 100%;
+            overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", "Arial", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            background-color: #f4f6f9; color: #333;
+        }
+        #app-container {
+            height: 100%; width: 100%; padding: 10px; box-sizing: border-box;
+            display: flex; flex-direction: column;
+        }
+
+        /* 2. 顶部工具栏 */
+        #top-toolbar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 10px 10px 10px; border-bottom: 2px solid #3f51b5; flex-shrink: 0;
+        }
+        #main-title {
+            margin: 0; font-size: 1.4em; color: #1a237e;
+            flex-grow: 1; text-align: center; display: flex;
+            align-items: center; justify-content: center; gap: 15px;
+        }
+        .toolbar-buttons { display: flex; gap: 10px; }
+        .toolbar-buttons button {
+            padding: 6px 12px; font-size: 13px; background-color: #fff; color: #3f51b5;
+            border: 1px solid #3f51b5; border-radius: 5px; cursor: pointer; transition: all 0.2s;
+        }
+        .toolbar-buttons button:hover { background-color: #e8eaf6; }
+        .clickable-title {
+            cursor: pointer; text-decoration: underline; text-decoration-color: #c5cae9;
+            transition: color 0.2s, text-decoration-color 0.2s;
+        }
+        .clickable-title:hover { color: #3f51b5; text-decoration-color: #3f51b5; }
+        #back-to-annual-btn {
+            background: none; border: 1px solid #c5cae9; color: #3f51b5; border-radius: 50%;
+            width: 30px; height: 30px; line-height: 28px; font-size: 20px; cursor: pointer; display: none;
+            transition: all 0.2s;
+        }
+        #back-to-annual-btn:hover { background-color: #e8eaf6; }
+
+        /* 3. 主体布局 */
+        #main-layout { display: flex; gap: 10px; flex-grow: 1; overflow: hidden; margin-top: 10px; position: relative; }
+        #controls-panel { width: 250px; flex-shrink: 0; display: flex; flex-direction: column; background: #fff; padding: 10px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        #left-panel-container { margin-bottom: 15px; border-bottom: 1px solid #ddd; padding-bottom: 15px; flex-shrink: 0; }
+        #info-panel { flex-grow: 1; padding: 10px; background: #f1f3f5; border-radius: 5px; overflow-y: auto; font-size: 13px; line-height: 1.6; }
+        #info-panel h3 { margin: 0 0 10px 0; font-size: 1.1em; color: #1a237e; border-bottom: 1px solid #c5cae9; padding-bottom: 5px;}
+        .stat-item { display: flex; justify-content: space-between; margin-bottom: 8px; }
+        .stat-item span:last-child { font-weight: bold; color: #3f51b5; }
+        
+        /* 年历样式 */
+        #panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        #panel-header .arrow-btn { background: none; border: none; cursor: pointer; font-size: 18px; color: #3f51b5; padding: 5px; }
+        #panel-header #change-year-btn { 
+            font-weight: bold; border: 1px solid #c5cae9; padding: 2px 8px; border-radius: 4px; 
+            background-color: #e8eaf6; font-size: 14px; cursor: pointer; color: #1a237e;
+            font-family: inherit;
+        }
+        #calendar-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; text-align: center; }
+        .month-cell { padding: 8px 0; cursor: pointer; border-radius: 5px; transition: background-color 0.2s; border: 1px solid transparent; }
+        .month-cell:hover { background-color: #e8eaf6; }
+        .current-month { background-color: #3f51b5; color: white; font-weight: bold; }
+        .current-month:hover { background-color: #3f51b5; }
+
+        /* 4. 内容面板 */
+        #content-panel { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; gap: 10px; transition: width 0.3s ease-in-out; }
+        #schedule-table-container { flex-grow: 1; overflow: auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        #load-chart-container { flex-shrink: 0; height: 220px; display: flex; flex-direction: column; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 10px; }
+        #load-chart { flex-grow: 1; width: 100%; }
+
+        /* 5. 表格高亮与视图样式 */
+        .highlight-row { background-color: #e3f2fd !important; }
+        .highlight-column { background-color: #e3f2fd !important; }
+        .highlight-cell { background-color: #bbdefb !important; }
+        .view-annual table, .view-monthly table { border-collapse: collapse; font-size: 11px; white-space: nowrap; }
+        .view-annual td, .view-monthly td { cursor: pointer; }
+        .view-annual th, .view-annual td, .view-monthly th, .view-monthly td { border: 1px solid #ddd; padding: 2px; text-align: center; }
+        .view-annual thead th { background-color: #e8eaf6; position: sticky; top: 0; z-index: 10; font-weight: normal; }
+        .view-annual td { height: 25px; box-sizing: border-box; }
+        .view-annual .sticky-col { position: sticky; background-color: #fff; vertical-align: middle; }
+        .view-annual .sticky-col-1 { left: 0; z-index: 14; min-width: 60px; }
+        .view-annual .sticky-col-2 { left: 60px; z-index: 13; min-width: 50px; }
+        .view-annual .sticky-col-3 { left: 110px; z-index: 12; box-shadow: 3px 0 5px -2px rgba(0,0,0,0.1); min-width: 70px; }
+        .view-annual .sticky-corner { position: sticky; top: 0; z-index: 15; background-color: #e8eaf6; }
+        .view-annual .month-header.drill-down { cursor: pointer; text-decoration: underline; color: #3f51b5; }
+        .view-annual .month-header.drill-down:hover { background-color: #c5cae9; }
+        .view-monthly table { width: 100%; }
+        .view-monthly thead th { background-color: #e8eaf6; position: sticky; top: 0; z-index: 2; }
+        .view-monthly tbody th:first-child { position: sticky; left: 0; background-color: #f1f3f5; z-index: 3; min-width: 50px; }
+        .view-monthly .weekend { background-color: #f5f5f5; }
+        .summary-col { background-color: #f1f3f5; font-weight: bold; min-width: 30px; }
+        thead .summary-col { background-color: #e8eaf6; }
+        .summary-hidden .summary-col { display: none; }
+        
+        /* 任务高亮颜色定义 */
+        td.highlight-task-均衡修 { background-color: rgba(121, 134, 203, 0.2); }
+        td.highlight-task-专项修 { background-color: rgba(255, 183, 77, 0.2); }
+        td.highlight-task-特别修 { background-color: rgba(77, 182, 172, 0.2); }
+
+        /* 具体单元格高亮颜色定义 (更深的颜色用于专项高亮) */
+        td.highlight-specific-均衡修 { background-color: rgba(121, 134, 203, 0.4) !important; }
+        td.highlight-specific-专项修 { background-color: rgba(255, 183, 77, 0.4) !important; }
+        td.highlight-specific-特别修 { background-color: rgba(77, 182, 172, 0.4) !important; }
+        
+        /* 6. 编辑器与模态框样式 */
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none; align-items: center; justify-content: center; z-index: 1000;
+        }
+        .modal.visible { display: flex; }
+        .modal-content {
+            background-color: #fff; padding: 20px; border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3); min-width: 300px;
+        }
+        .modal-content h3 { margin: 0 0 15px 0; color: #1a237e; }
+        .modal-actions { margin-top: 20px; text-align: right; }
+        .modal-actions button {
+            padding: 8px 16px; margin-left: 10px; border-radius: 5px; border: 1px solid #ccc; cursor: pointer;
+        }
+        .modal-actions .confirm-btn { background-color: #3f51b5; color: white; border-color: #3f51b5; }
+        #scheduling-modal .form-group { margin-bottom: 15px; }
+        #scheduling-modal label { display: block; margin-bottom: 5px; font-size: 14px; }
+        #scheduling-modal input { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        .progress-container { width: 100%; background-color: #e0e0e0; border-radius: 4px; overflow: hidden; height: 20px; display: none; }
+        .progress-bar {
+            width: 0; height: 100%; background-color: #4caf50;
+            text-align: center; line-height: 20px; color: white;
+            font-size: 12px; transition: width 0.2s ease-in-out;
+        }
+        #year-selector-list { list-style: none; padding: 0; margin: 0; max-height: 300px; overflow-y: auto; }
+        #year-selector-list li { padding: 10px; text-align: center; cursor: pointer; border-radius: 5px; transition: background-color 0.2s; }
+        #year-selector-list li:hover { background-color: #e8eaf6; }
+        #year-selector-list li.current { background-color: #3f51b5; color: white; font-weight: bold; }
+        #cell-editor { position: absolute; display: none; background-color: #fff; border: 1px solid #999; box-shadow: 0 4px 12px rgba(0,0,0,0.25); padding: 8px; border-radius: 8px; z-index: 100; flex-direction: column; gap: 8px; width: 280px; }
+        .editor-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px; border-bottom: 1px solid #ddd; margin-bottom: 8px; }
+        #editor-vehicle, #editor-context { font-size: 13px; font-weight: bold; color: #1a237e; }
+        #editor-context { font-size: 11px; color: #666; }
+        #task-selector-content { display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; padding-right: 5px; }
+        #task-selector-content::-webkit-scrollbar { width: 6px; }
+        #task-selector-content::-webkit-scrollbar-thumb { background-color: #c5cae9; border-radius: 3px; }
+        .task-category-title { font-size: 13px; font-weight: bold; color: #3f51b5; border-bottom: 1px solid #c5cae9; padding-bottom: 4px; margin-bottom: 4px; }
+        .task-item { display: inline-block; padding: 4px 8px; font-size: 11px; border-radius: 12px; background-color: #f1f3f5; color: #333; cursor: pointer; transition: all 0.2s; margin: 2px; }
+        .task-item:hover { background-color: #e0e7ff; }
+        .task-item.selected { background-color: #3f51b5; color: white; font-weight: bold; }
+        .editor-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #ddd; padding-top: 8px; }
+        #selected-task-info { display: flex; flex-direction: column; font-size: 11px; flex-grow: 1; margin-right: 8px; }
+        #task-name { font-weight: bold; }
+        #task-manhours { color: #555; }
+        #editor-cancel, #editor-confirm { padding: 4px 10px; border: none; border-radius: 12px; cursor: pointer; font-size: 11px; font-weight: bold; }
+        #editor-cancel { background-color: #bdbdbd; color: white; }
+        #editor-cancel:hover { background-color: #a1a1a1; }
+        #editor-confirm { background-color: #4CAF50; color: white; }
+        #editor-confirm:hover { background-color: #45a049; }
+
+        /* 7. LLM Chat Panel Styles */
+        #llm-chat-panel {
+            width: 320px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s ease-in-out;
+            transform: translateX(0);
+        }
+        #llm-chat-panel.collapsed {
+            width: 0;
+            padding: 0;
+            opacity: 0;
+            transform: translateX(100%);
+        }
+        #chat-toggle-tab {
+            position: absolute;
+            top: 50%;
+            right: 0;
+            transform: translateY(-50%) translateX(100%);
+            width: 25px;
+            padding: 15px 0;
+            background-color: #3f51b5;
+            color: white;
+            border-radius: 8px 0 0 8px;
+            cursor: pointer;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            z-index: 20;
+            opacity: 0;
+            transition: all 0.3s ease-in-out;
+            visibility: hidden;
+        }
+        #llm-chat-panel.collapsed + #chat-toggle-tab {
+            opacity: 1;
+            transform: translateY(-50%) translateX(0);
+            visibility: visible;
+        }
+
+        #chat-header {
+            padding: 10px;
+            font-size: 1.1em;
+            color: #1a237e;
+            border-bottom: 1px solid #c5cae9;
+            flex-shrink: 0;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #chat-help-btn {
+            background: none; border: 1px solid #c5cae9; color: #3f51b5;
+            border-radius: 50%; width: 24px; height: 24px;
+            cursor: pointer; font-size: 14px; font-weight: bold;
+            display: flex; align-items: center; justify-content: center;
+            transition: background-color 0.2s;
+        }
+        #chat-help-btn:hover {
+            background-color: #e8eaf6;
+        }
+        #chat-messages {
+            flex-grow: 1;
+            padding: 10px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .chat-message {
+            max-width: 85%;
+            padding: 8px 12px;
+            border-radius: 15px;
+            line-height: 1.5;
+            font-size: 14px;
+            word-wrap: break-word;
+        }
+        .chat-message.user {
+            background-color: #3f51b5;
+            color: white;
+            border-bottom-right-radius: 3px;
+            align-self: flex-end;
+        }
+        .chat-message.model {
+            background-color: #f1f3f5;
+            color: #333;
+            border-bottom-left-radius: 3px;
+            align-self: flex-start;
+        }
+        .chat-message.model .thinking-indicator {
+            display: flex;
+            align-items: center;
+        }
+        .chat-message.model .dot {
+            width: 8px; height: 8px; border-radius: 50%; background-color: #9fa8da; margin: 0 2px;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .dot:nth-child(1) { animation-delay: -0.32s; }
+        .dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
+        }
+        #chat-input-container {
+            border-top: 1px solid #ddd;
+            padding: 10px;
+            flex-shrink: 0;
+            background-color: #fcfdff;
+        }
+        #chat-input-form {
+            display: flex;
+            gap: 5px;
+        }
+        #chat-input {
+            flex-grow: 1;
+            border: 1px solid #ccc;
+            border-radius: 15px;
+            padding: 0 12px;
+            font-size: 14px;
+        }
+        #chat-input:focus {
+            outline: none;
+            border-color: #3f51b5;
+        }
+        #chat-send-btn, #chat-upload-btn {
+            background: none; border: 1px solid #c5cae9; color: #3f51b5;
+            border-radius: 50%; width: 32px; height: 32px;
+            cursor: pointer; font-size: 16px;
+            display: flex; align-items: center; justify-content: center;
+            transition: background-color 0.2s;
+        }
+        #chat-send-btn:hover, #chat-upload-btn:hover {
+            background-color: #e8eaf6;
+        }
+        
+        /* 8. Canvas, Animations & Highlights */
+        #analysis-panel { margin-top: 15px; border-top: 1px solid #ddd; padding-top: 15px; }
+        #analysis-panel h4 { margin: 0 0 10px 0; font-size: 1em; color: #1a237e; }
+        .analysis-section { margin-bottom: 10px; }
+        .analysis-list { list-style: none; padding: 0; margin: 0; font-size: 12px; }
+        .analysis-list li { display: flex; justify-content: space-between; padding: 3px 5px; border-radius: 3px; }
+        .clickable-stat { cursor: pointer; text-decoration: underline; }
+        .clickable-stat:hover { background-color: #e0e7ff; }
+        .stat-value { font-weight: bold; }
+        .stat-low { color: #1e88e5; }
+        .stat-high { color: #e53935; }
+
+        .canvas-card {
+            background-color: #fff; border: 1px solid #ddd; border-radius: 8px;
+            padding: 10px; margin-top: 5px; cursor: pointer; transition: all 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .canvas-card:hover { border-color: #3f51b5; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .canvas-header { font-weight: bold; color: #1a237e; margin-bottom: 5px; display:flex; align-items: center; gap: 5px;}
+        .canvas-details { font-size: 12px; color: #666; }
+        .canvas-card.applied { background-color: #e8f5e9; border-color: #4caf50; cursor: default; }
+
+        @keyframes highlight-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(63, 81, 181, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(63, 81, 181, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(63, 81, 181, 0); }
+        }
+        .highlight-effect {
+            animation: highlight-pulse 1.5s ease-out;
+            border-radius: 5px; 
+        }
+
+        .applying-canvas-animation::after {
+            content: '';
+            position: fixed;
+            z-index: 2000;
+            left: 50%; top: 50%;
+            width: 100px; height: 100px;
+            background-image: url('data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22%25233f51b5%22%3E%3Cpath%20d%3D%22M0%200h24v24H0V0z%22%20fill%3D%22none%22%2F%3E%3Cpath%20d%3D%22M14%202H6c-1.1%200-1.99.9-1.99%202L4%2020c0%201.1.89%202%201.99%202H18c1.1%200%202-.9%202-2V8l-6-6zm2%2016H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5%209H13z%22%2F%3E%3C%2Fsvg%3E');
+            background-size: contain;
+            background-repeat: no-repeat;
+            opacity: 0;
+            animation: fly-and-fade 1s ease-out forwards;
+        }
+
+        @keyframes fly-and-fade {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+            100% { transform: translate(-200%, -200%) scale(1.5); opacity: 0; }
+        }
+
+    </style>
+</head>
+<body>
+<div id="app-container">
+    <div id="top-toolbar">
+        <div class="toolbar-buttons">
+            <button id="import-data-btn">导入数据</button>
+            <button id="export-data-btn">导出数据</button>
+        </div>
+        <h1 id="main-title">
+            <button id="back-to-annual-btn">‹</button>
+            <span id="title-text"></span>
+        </h1>
+        <div class="toolbar-buttons">
+            <button id="pre-schedule-annual-btn">预排年计划</button>
+            <button id="pre-schedule-monthly-btn">预排月计划</button>
+        </div>
+    </div>
+    <div id="main-layout">
+        <div id="controls-panel">
+            <div id="left-panel-container"></div>
+            <div id="info-panel"></div>
+        </div>
+        <div id="content-panel">
+            <div id="schedule-table-container"></div>
+            <div id="load-chart-container">
+                <div id="load-chart"></div>
+            </div>
+        </div>
+
+        <div id="llm-chat-panel">
+            <div id="chat-header">
+                <span>智能对话助手</span>
+                <button id="chat-help-btn" title="查看样例指令">?</button>
+            </div>
+            <div id="chat-messages">
+                <div class="chat-message model">你好！你可以向我提问或发出指令。点击 "?" 查看样例。</div>
+            </div>
+            <div id="chat-input-container">
+                <form id="chat-input-form">
+                    <button type="button" id="chat-upload-btn" title="上传文件">📎</button>
+                    <input type="file" id="file-input" style="display: none;">
+                    <input type="text" id="chat-input" placeholder="输入消息..." autocomplete="off">
+                    <button type="submit" id="chat-send-btn" title="发送">➤</button>
+                </form>
+            </div>
+        </div>
+        <div id="chat-toggle-tab">智能助手</div>
+    </div>
+</div>
+
+<div id="cell-editor">
+    <div class="editor-header">
+        <span id="editor-vehicle"></span>
+        <span id="editor-context"></span>
+    </div>
+    <div id="task-selector-content"></div>
+    <div class="editor-footer">
+        <div id="selected-task-info">
+            <span id="task-name"></span>
+            <span id="task-manhours"></span>
+        </div>
+        <button id="editor-cancel">取消</button>
+        <button id="editor-confirm">确定</button>
+    </div>
+</div>
+
+<div id="scheduling-modal" class="modal">
+    <div class="modal-content">
+        <h3 id="scheduling-modal-title">预排计划</h3>
+        <div id="scheduling-form">
+            <div class="form-group">
+                <label for="scheduling-input" id="scheduling-label">选择年月</label>
+                <input type="text" id="scheduling-input" placeholder="例如: 2025 或 2025-06">
+            </div>
+            <div class="modal-actions">
+                <button id="scheduling-cancel-btn">取消</button>
+                <button id="scheduling-confirm-btn" class="confirm-btn">确定</button>
+            </div>
+        </div>
+        <div class="progress-container" id="scheduling-progress-container">
+            <div class="progress-bar" id="scheduling-progress-bar">0%</div>
+        </div>
+    </div>
+</div>
+
+<div id="year-selector-modal" class="modal">
+    <div class="modal-content">
+        <h3>选择年份</h3>
+        <ul id="year-selector-list"></ul>
+        <div class="modal-actions">
+            <button id="year-selector-close-btn">关闭</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// --- 1. 全局状态和配置 ---
+const state = { 
+    currentView: 'annual', 
+    currentDate: new Date(), 
+    selectedMonth: new Date().getMonth(), 
+    annualData: {}, 
+    monthlyData: {},
+    highlightedTaskType: null,
+    schedulingContext: null // 新增：用于分步排程的上下文
+};
+const VEHICLES = Array.from({ length: 35 }, (_, i) => `11${String(i + 1).padStart(2, '0')}`);
+const TASK_DEFS = { 'T1':{type:'均衡修',manHours:8},'T2':{type:'均衡修',manHours:12},'T3':{type:'均衡修',manHours:10},'J1':{type:'特别修',manHours:6},'J6':{type:'特别修',manHours:10},'J7':{type:'特别修',manHours:10},'J9':{type:'特别修',manHours:8},'J10':{type:'特别修',manHours:8},'J11':{type:'特别修',manHours:12},'J12':{type:'特别修',manHours:12},'Z1':{type:'专项修',manHours:16},'Z2':{type:'专项修',manHours:24},'Z3':{type:'专项修',manHours:16},'Z5':{type:'专项修',manHours:20},'Z6':{type:'专项修',manHours:20},'Z7':{type:'专项修',manHours:30} };
+const TASK_CATEGORIES = ['均衡修', '特别修', '专项修'];
+const CATEGORY_COLORS = { '均衡修': '#7986cb', '专项修': '#ffb74d', '特别修': '#4db6ac' };
+const TASK_TYPE_ROWSPANS = { '均衡修': 1, '专项修': 7, '特别修': 4 };
+const ANNUAL_SUMMARY_HEADERS = ['J', 'Z1', 'Z2', 'Z3', 'Z5', 'Z6', 'Z7', 'T1', 'T2', 'T3'];
+
+// --- 2. 状态管理 ---
+let currentEditingCell = null, selectedTaskInEditor = null, gridMap = null;
+
+// --- 3. DOM 元素缓存 ---
+const bodyEl = document.body;
+const appContainer = document.getElementById('app-container');
+const titleTextEl = document.getElementById('title-text');
+const backToAnnualBtnEl = document.getElementById('back-to-annual-btn');
+const scheduleTableContainerEl = document.getElementById('schedule-table-container');
+const infoPanelEl = document.getElementById('info-panel');
+const leftPanelContainerEl = document.getElementById('left-panel-container');
+let chartInstance = null;
+const importDataBtn = document.getElementById('import-data-btn');
+const exportDataBtn = document.getElementById('export-data-btn');
+const preScheduleAnnualBtn = document.getElementById('pre-schedule-annual-btn');
+const preScheduleMonthlyBtn = document.getElementById('pre-schedule-monthly-btn');
+const cellEditor = document.getElementById('cell-editor');
+const editorVehicleSpan = document.getElementById('editor-vehicle');
+const editorContextSpan = document.getElementById('editor-context');
+const taskSelectorContent = document.getElementById('task-selector-content');
+const taskNameSpan = document.getElementById('task-name');
+const taskManhoursSpan = document.getElementById('task-manhours');
+const editorCancelBtn = document.getElementById('editor-cancel');
+const editorConfirmBtn = document.getElementById('editor-confirm');
+const schedulingModal = document.getElementById('scheduling-modal');
+const schedulingModalTitle = document.getElementById('scheduling-modal-title');
+const schedulingForm = document.getElementById('scheduling-form');
+const schedulingLabel = document.getElementById('scheduling-label');
+const schedulingInput = document.getElementById('scheduling-input');
+const schedulingCancelBtn = document.getElementById('scheduling-cancel-btn');
+const schedulingConfirmBtn = document.getElementById('scheduling-confirm-btn');
+const schedulingProgressContainer = document.getElementById('scheduling-progress-container');
+const schedulingProgressBar = document.getElementById('scheduling-progress-bar');
+const yearSelectorModal = document.getElementById('year-selector-modal');
+const yearSelectorList = document.getElementById('year-selector-list');
+const yearSelectorCloseBtn = document.getElementById('year-selector-close-btn');
+
+// --- 4. 核心导航与视图管理 ---
+function navigateTo(view, monthIndex = null) {
+    state.currentView = view;
+    if (view === 'monthly' && monthIndex !== null) {
+        state.currentDate.setMonth(monthIndex);
+        state.selectedMonth = monthIndex;
+        // generateMonthlyData(); // Data generation is now part of applying canvas
+    }
+    clearCellEditor();
+    clearTaskHighlights();
+    updateUI();
+}
+
+function updateUI() {
+    bodyEl.className = `view-${state.currentView}`;
+    backToAnnualBtnEl.style.display = state.currentView === 'monthly' ? 'flex' : 'none';
+    updateTitle();
+    renderCurrentView();
+    renderInfoPanel(); // Always render default info panel first
+    if (state.highlightedTaskType) {
+        // Re-apply highlights and analysis if a type is selected
+        highlightTaskType(state.highlightedTaskType, false);
+    }
+    renderLoadChart();
+    renderLeftPanel();
+}
+
+function updateTitle() {
+    const year = state.currentDate.getFullYear();
+    if (state.currentView === 'annual') {
+        titleTextEl.textContent = `${year}年度检修计划`;
+    } else {
+        titleTextEl.innerHTML = `<span id="title-year-btn" class="clickable-title" title="返回${year}年计划">${year}年</span> &nbsp; <strong style="color:#3f51b5;">${state.selectedMonth + 1}月</strong> &nbsp; 检修计划`;
+    }
+}
+
+function renderCurrentView() {
+    scheduleTableContainerEl.innerHTML = '';
+    gridMap = null;
+    if (state.currentView === 'annual') {
+        renderAnnualSchedule();
+    } else {
+        renderMonthlyGantt();
+    }
+}
+
+// --- 5. 数据生成与处理 ---
+function generateAnnualData(year, typesToSchedule = TASK_CATEGORIES) {
+    const data = { schedule: {}, monthlyManHours: {}, monthlySummary: {}, allMonthTasks: {} };
+    for (let m = 0; m < 12; m++) {
+        const monthKey = `${year}-${m}`;
+        data.schedule[monthKey] = {};
+        data.monthlyManHours[m] = Object.fromEntries(TASK_CATEGORIES.map(t => [t, 0]));
+        data.monthlySummary[m] = Object.fromEntries(ANNUAL_SUMMARY_HEADERS.map(h => [h, 0]));
+        data.allMonthTasks[m] = [];
+        VEHICLES.forEach(v => {
+            data.schedule[monthKey][v] = {};
+            TASK_CATEGORIES.forEach(t => data.schedule[monthKey][v][t] = []);
+            let tasksToAssign = Math.floor(Math.random() * 4);
+            for (let i = 0; i < tasksToAssign; i++) {
+                const taskCode = Object.keys(TASK_DEFS)[Math.floor(Math.random() * Object.keys(TASK_DEFS).length)];
+                const taskDef = TASK_DEFS[taskCode];
+                if (taskDef && typesToSchedule.includes(taskDef.type)) {
+                    if(data.schedule[monthKey][v][taskDef.type].length < TASK_TYPE_ROWSPANS[taskDef.type]) {
+                        data.schedule[monthKey][v][taskDef.type].push(taskCode);
+                        data.monthlyManHours[m][taskDef.type] += taskDef.manHours;
+                        data.allMonthTasks[m].push({ vehicle: v, task: taskCode, def: taskDef });
+                        const summaryKey = taskCode.startsWith('J') ? 'J' : taskCode;
+                        if(data.monthlySummary[m][summaryKey] !== undefined) data.monthlySummary[m][summaryKey]++;
+                    }
+                }
+            }
+        });
+    }
+    return data; // Return data for canvas
+}
+
+function generateMonthlyData(typesToSchedule = TASK_CATEGORIES) {
+    const year = state.currentDate.getFullYear();
+    const month = state.selectedMonth;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    if (!state.annualData || !state.annualData.allMonthTasks || !state.annualData.schedule || !Object.keys(state.annualData.schedule).some(k => k.startsWith(year))) {
+       state.annualData = generateAnnualData(year, typesToSchedule);
+    }
+    const tasksForMonth = (state.annualData.allMonthTasks[month] || []).filter(t => typesToSchedule.includes(t.def.type));
+    const data = { schedule: {}, dailyManHours: {}, vehicleSummary: {} };
+    for (let i = 1; i <= daysInMonth; i++) data.dailyManHours[i] = Object.fromEntries(TASK_CATEGORIES.map(t => [t, 0]));
+    VEHICLES.forEach(v => data.vehicleSummary[v] = Object.fromEntries(TASK_CATEGORIES.map(t => [t, 0])));
+    tasksForMonth.forEach(({ vehicle, task, def }) => {
+        const day = Math.floor(Math.random() * daysInMonth) + 1;
+        if(!data.schedule[`${vehicle}-${day}`]) {
+            data.schedule[`${vehicle}-${day}`] = {code: task, def: def};
+            data.dailyManHours[day][def.type] += def.manHours;
+            data.vehicleSummary[vehicle][def.type]++;
+        }
+    });
+    // Unlike annual, monthly data directly replaces the state
+    return data;
+}
+
+// ... (updateMonthlySchedule and updateAnnualSchedule remain the same)
+function updateMonthlySchedule(vehicle, day, newTaskCode) {
+    const oldTask = state.monthlyData.schedule[`${vehicle}-${day}`];
+    if (oldTask?.code === newTaskCode || (!oldTask && !newTaskCode)) return;
+    if (oldTask) {
+        state.monthlyData.dailyManHours[day][oldTask.def.type] -= oldTask.def.manHours;
+        state.monthlyData.vehicleSummary[vehicle][oldTask.def.type]--;
+    }
+    if (newTaskCode && TASK_DEFS[newTaskCode]) {
+        const newDef = TASK_DEFS[newTaskCode];
+        state.monthlyData.schedule[`${vehicle}-${day}`] = { code: newTaskCode, def: newDef };
+        state.monthlyData.dailyManHours[day][newDef.type] += newDef.manHours;
+        state.monthlyData.vehicleSummary[vehicle][newDef.type]++;
+    } else {
+        delete state.monthlyData.schedule[`${vehicle}-${day}`];
+    }
+}
+
+function updateAnnualSchedule(vehicle, month, taskType, taskIndex, newTaskCode) {
+    const year = state.currentDate.getFullYear();
+    const taskArray = state.annualData.schedule[`${year}-${month}`][vehicle][taskType];
+    const oldTaskCode = taskArray[taskIndex];
+    if (oldTaskCode === newTaskCode) return;
+
+    if (oldTaskCode && TASK_DEFS[oldTaskCode]) {
+        const oldDef = TASK_DEFS[oldTaskCode];
+        state.annualData.monthlyManHours[month][oldDef.type] -= oldDef.manHours;
+        const oldSummaryKey = oldTaskCode.startsWith('J') ? 'J' : oldTaskCode;
+        if (state.annualData.monthlySummary[month][oldSummaryKey] !== undefined && state.annualData.monthlySummary[month][oldSummaryKey] > 0) {
+            state.annualData.monthlySummary[month][oldSummaryKey]--;
+        }
+    }
+    if (newTaskCode && TASK_DEFS[newTaskCode]) {
+        const newDef = TASK_DEFS[newTaskCode];
+        state.annualData.monthlyManHours[month][newDef.type] += newDef.manHours;
+        const newSummaryKey = newTaskCode.startsWith('J') ? 'J' : newTaskCode;
+        if (state.annualData.monthlySummary[month][newSummaryKey] !== undefined) {
+            state.annualData.monthlySummary[month][newSummaryKey]++;
+        }
+    }
+    
+    if (newTaskCode) {
+      taskArray[taskIndex] = newTaskCode;
+    } else {
+      taskArray.splice(taskIndex, 1);
+    }
+}
+
+// --- 6. 渲染逻辑与数据统计 ---
+
+// ... (getPlanStats and other render functions remain largely the same)
+function getPlanStats() {
+    const year = state.currentDate.getFullYear();
+    if (state.currentView === 'annual') {
+        if (!state.annualData || !state.annualData.monthlyManHours) return { totalTasks: 0, busiestPeriod: 'N/A', maxHours: 0 };
+        const { monthlyManHours } = state.annualData;
+        const stats = { totalTasks: 0, busiestPeriod: '', maxHours: 0 };
+        for(let m=0; m<12; m++) {
+            const tasksInMonth = state.annualData.schedule[`${year}-${m}`];
+            if (tasksInMonth) {
+                stats.totalTasks += Object.values(tasksInMonth).flatMap(v => Object.values(v)).flat().length;
+            }
+            const hours = Object.values(monthlyManHours[m] || {}).reduce((a, b) => a + b, 0);
+            if(hours > stats.maxHours) {
+                stats.maxHours = Math.round(hours);
+                stats.busiestPeriod = `${m+1}月`;
+            }
+        }
+        return stats;
+    } else {
+        if (!state.monthlyData || !state.monthlyData.schedule) return { totalTasks: 0, busiestPeriod: 'N/A', maxHours: 0 };
+        const { schedule, dailyManHours } = state.monthlyData;
+        const stats = { totalTasks: Object.keys(schedule).length, busiestPeriod: '', maxHours: 0 };
+        Object.entries(dailyManHours).forEach(([day, hoursByType]) => {
+            const totalDayHours = Object.values(hoursByType).reduce((a,b) => a+b, 0);
+            if (totalDayHours > stats.maxHours) { stats.maxHours = Math.round(totalDayHours); stats.busiestPeriod = `${day}日`; }
+        });
+        return stats;
+    }
+}
+
+
+function renderInfoPanel() {
+    let existingAnalysisPanel = document.getElementById('analysis-panel');
+    if (existingAnalysisPanel) existingAnalysisPanel.remove();
+
+    const year = state.currentDate.getFullYear();
+    let summaryHTML = '';
+
+    if (state.currentView === 'annual') {
+        const { T, J, Z, totalTasks, busiestMonth, maxHours } = (() => {
+            let T = 0, J = 0, Z = 0, totalTasks = 0, busiestMonth = '', maxHours = 0;
+            if (!state.annualData || !state.annualData.schedule || !state.annualData.monthlyManHours) return { T, J, Z, totalTasks, busiestMonth, maxHours };
+            
+            for(let m = 0; m < 12; m++) {
+                const tasksInMonth = state.annualData.schedule[`${year}-${m}`];
+                if (tasksInMonth) {
+                    Object.values(tasksInMonth).forEach(vehicleTasks => {
+                        Object.values(vehicleTasks).forEach(tasksByType => {
+                            totalTasks += tasksByType.length;
+                            tasksByType.forEach(task => {
+                                if (task.startsWith('T')) T++; else if (task.startsWith('J')) J++; else if (task.startsWith('Z')) Z++;
+                            });
+                        });
+                    });
+                }
+                const hours = Object.values(state.annualData.monthlyManHours[m] || {}).reduce((a, b) => a + b, 0);
+                if(hours > maxHours) {
+                    maxHours = Math.round(hours);
+                    busiestMonth = `${m+1}月`;
+                }
+            }
+            return { T, J, Z, totalTasks, busiestMonth, maxHours };
+        })();
+        summaryHTML = `<h3>${year}年 计划概览</h3><div class="stat-item"><span>总任务数:</span> <span>${totalTasks}</span></div><div class="stat-item"><span>均衡修(T):</span> <span>${T}</span></div><div class="stat-item"><span>特别修(J):</span> <span>${J}</span></div><div class="stat-item"><span>专项修(Z):</span> <span>${Z}</span></div><div class="stat-item"><span>最繁忙月份:</span> <span>${busiestMonth} (${maxHours}h)</span></div>`;
+    } else {
+        const month = state.selectedMonth;
+        const { schedule, dailyManHours } = state.monthlyData || { schedule: {}, dailyManHours: {} };
+        const stats = { totalTasks: Object.keys(schedule).length, T: 0, J: 0, Z: 0, busiestDay: '', maxHours: 0 };
+        Object.values(schedule).forEach(({code}) => {
+            if (code.startsWith('T')) stats.T++; else if (code.startsWith('J')) stats.J++; else if (code.startsWith('Z')) stats.Z++;
+        });
+        Object.entries(dailyManHours).forEach(([day, hoursByType]) => {
+            const totalDayHours = Object.values(hoursByType).reduce((a,b) => a+b, 0);
+            if (totalDayHours > stats.maxHours) { stats.maxHours = Math.round(totalDayHours); stats.busiestDay = `${day}日`; }
+        });
+        summaryHTML = `<h3>${month + 1}月 计划概览</h3><div class="stat-item"><span>总任务数:</span> <span>${stats.totalTasks}</span></div><div class="stat-item"><span>均衡修(T):</span> <span>${stats.T}</span></div><div class="stat-item"><span>特别修(J):</span> <span>${stats.J}</span></div><div class="stat-item"><span>专项修(Z):</span> <span>${stats.Z}</span></div><div class="stat-item"><span>最繁忙日期:</span> <span>${stats.busiestDay} (${stats.maxHours}h)</span></div>`;
+    }
+    infoPanelEl.innerHTML = summaryHTML;
+}
+
+function renderAnnualSchedule() {
+    const year = state.currentDate.getFullYear();
+    if (!state.annualData.schedule) return;
+    const { schedule, monthlySummary } = state.annualData;
+    const monthRows = TASK_CATEGORIES.reduce((sum, type) => sum + TASK_TYPE_ROWSPANS[type], 0);
+    let headerHTML = `<thead><tr><th class="sticky-corner sticky-col-1">季度</th><th class="sticky-corner sticky-col-2">月份</th><th class="sticky-corner sticky-col-3">修程</th>
+        ${VEHICLES.map(v => `<th data-vehicle-col="${v}">${v}</th>`).join('')}
+        ${ANNUAL_SUMMARY_HEADERS.map(h => `<th class="summary-col">${h}</th>`).join('')}</tr></thead>`;
+    let bodyHTML = '<tbody>';
+    for (let m = 0; m < 12; m++) {
+        const quarter = Math.floor(m / 3) + 1;
+        let isFirstMonthRow = true;
+        TASK_CATEGORIES.forEach(taskType => {
+            for (let i = 0; i < TASK_TYPE_ROWSPANS[taskType]; i++) {
+                bodyHTML += `<tr data-month-row="${m}">`;
+                if (m % 3 === 0 && isFirstMonthRow && i === 0) bodyHTML += `<th class="sticky-col sticky-col-1" rowspan="${3 * monthRows}">第${quarter}季度</th>`;
+                if (isFirstMonthRow && i === 0) bodyHTML += `<th class="sticky-col sticky-col-2 month-header drill-down" rowspan="${monthRows}" data-month="${m}">${m + 1}月</th>`;
+                if (i === 0) bodyHTML += `<th class="sticky-col sticky-col-3" rowspan="${TASK_TYPE_ROWSPANS[taskType]}">${taskType}</th>`;
+                bodyHTML += VEHICLES.map(v => {
+                    const task = schedule[`${year}-${m}`]?.[v]?.[taskType]?.[i] || '';
+                    return `<td data-vehicle="${v}" data-month="${m}" data-task-type="${taskType}" data-task-index="${i}">${task}</td>`;
+                }).join('');
+                if (isFirstMonthRow && i === 0) bodyHTML += ANNUAL_SUMMARY_HEADERS.map(h => `<td class="summary-col" rowspan="${monthRows}">${monthlySummary[m]?.[h] || 0}</td>`).join('');
+                bodyHTML += '</tr>';
+            }
+            isFirstMonthRow = false;
+        });
+    }
+    bodyHTML += '</tbody>';
+    scheduleTableContainerEl.innerHTML = `<table class="view-annual">${headerHTML}${bodyHTML}</table>`;
+}
+
+function renderMonthlyGantt() {
+    const year = state.currentDate.getFullYear();
+    const month = state.selectedMonth;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    if (!state.monthlyData.schedule) return;
+    const { schedule, vehicleSummary } = state.monthlyData;
+    let headerHTML = `<thead><tr><th rowspan="2">车号</th><th colspan="${daysInMonth}">${year}年 ${month+1}月</th>
+        ${TASK_CATEGORIES.map(t => `<th rowspan="2" class="summary-col">${t.charAt(0)}</th>`).join('')}</tr><tr>
+        ${Array.from({length: daysInMonth}, (_,i) => `<th data-day-col="${i+1}" class="${new Date(year,month,i+1).getDay()%6===0?'weekend':''}">${i+1}</th>`).join('')}</tr></thead>`;
+    let bodyHTML = '<tbody>';
+    bodyHTML += VEHICLES.map((v, rowIndex) => `<tr data-vehicle-row="${v}"><th>${v}</th>
+        ${Array.from({length: daysInMonth}, (_, colIndex) => {
+            const day = colIndex + 1;
+            const task = schedule[`${v}-${day}`]?.code || '';
+            const weekendClass = new Date(year,month,day).getDay()%6===0 ? 'weekend' : '';
+            return `<td class="${weekendClass}" data-vehicle="${v}" data-day="${day}">${task}</td>`;
+        }).join('')}
+        ${TASK_CATEGORIES.map(t => `<td class="summary-col">${vehicleSummary[v]?.[t] || 0}</td>`).join('')}</tr>`).join('');
+    bodyHTML += '</tbody>';
+    scheduleTableContainerEl.innerHTML = `<table class="view-monthly">${headerHTML}${bodyHTML}</table>`;
+}
+
+function renderLoadChart() {
+    if (!chartInstance) chartInstance = echarts.init(document.getElementById('load-chart'));
+    let option;
+    if (state.currentView === 'annual') {
+        if (!state.annualData.monthlyManHours) return;
+        const { monthlyManHours } = state.annualData;
+        option = { title: { text: '年度每月总工时负载', textStyle: { fontSize: 14, color: '#1a237e' } }, tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } }, legend: { data: TASK_CATEGORIES }, grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true }, xAxis: { type: 'category', data: Array.from({length: 12}, (_, i) => `${i + 1}月`) }, yAxis: { type: 'value', name: '总工时 (h)' }, series: TASK_CATEGORIES.map(type => ({ name: type, type: 'bar', stack: 'total', emphasis: { focus: 'series' }, itemStyle: { color: CATEGORY_COLORS[type] }, data: Array.from({length: 12}, (_, m) => monthlyManHours[m]?.[type] || 0) })) };
+    } else {
+        if (!state.monthlyData.dailyManHours) return;
+        const { dailyManHours } = state.monthlyData;
+        const daysInMonth = Object.keys(dailyManHours).length;
+        option = { title: { text: '月度每日总工时负载', textStyle: { fontSize: 14, color: '#1a237e' } }, tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } }, legend: { data: TASK_CATEGORIES }, grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true }, xAxis: { type: 'category', data: Array.from({length: daysInMonth}, (_, i) => `${i + 1}日`) }, yAxis: { type: 'value', name: '总工时 (h)' }, series: TASK_CATEGORIES.map(type => ({ name: type, type: 'bar', stack: 'total', emphasis: { focus: 'series' }, itemStyle: { color: CATEGORY_COLORS[type] }, data: Array.from({length: daysInMonth}, (_, i) => dailyManHours[i+1]?.[type] || 0) })) };
+    }
+    chartInstance.setOption(option, true);
+}
+
+function renderLeftPanel() {
+    const currentYear = state.currentDate.getFullYear();
+    let panelHTML = `<div id="panel-header"><button id="prev-btn" class="arrow-btn">‹</button><button id="change-year-btn">${currentYear}年</button><button id="next-btn" class="arrow-btn">›</button></div><div id="calendar-grid">`;
+    const monthNames = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
+    monthNames.forEach((name, index) => {
+        const isCurrentMonth = state.currentView === 'monthly' && index === state.selectedMonth;
+        panelHTML += `<div class="month-cell ${isCurrentMonth ? 'current-month' : ''}" data-month-index="${index}">${name}月</div>`;
+    });
+    panelHTML += `</div>`;
+    leftPanelContainerEl.innerHTML = panelHTML;
+}
+
+// ... (editor functions remain the same)
+// --- 7. 单元格编辑器功能 ---
+function startCellEditing(cellElement) {
+    clearCellEditor();
+    let context = {};
+    if (state.currentView === 'monthly') {
+        const { vehicle, day } = cellElement.dataset;
+        context = { vehicle, day, element: cellElement };
+        editorVehicleSpan.innerText = `车号: ${vehicle}`;
+        editorContextSpan.innerText = `日期: ${state.currentDate.getFullYear()}-${String(state.selectedMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    } else {
+        const { vehicle, month, taskType, taskIndex } = cellElement.dataset;
+        context = { vehicle, month, taskType, taskIndex, element: cellElement };
+        editorVehicleSpan.innerText = `车号: ${vehicle}`;
+        editorContextSpan.innerText = `月份: ${parseInt(month) + 1}月, 修程: ${taskType}`;
+    }
+    currentEditingCell = context;
+    const currentTask = cellElement.innerText;
+    selectedTaskInEditor = currentTask;
+    renderTaskSelector(currentTask);
+    updateTaskInfo(currentTask);
+    const rect = cellElement.getBoundingClientRect();
+    const containerRect = scheduleTableContainerEl.getBoundingClientRect();
+    cellEditor.style.left = `${Math.min(rect.left - containerRect.left, containerRect.width - cellEditor.offsetWidth - 10)}px`;
+    cellEditor.style.top = `${rect.bottom - containerRect.top + 5}px`;
+    cellEditor.style.display = 'flex';
+}
+function renderTaskSelector(currentTask) {
+    taskSelectorContent.innerHTML = '';
+    const tasksByCategory = TASK_CATEGORIES.reduce((acc, cat) => ({ ...acc, [cat]: [] }), {});
+    Object.entries(TASK_DEFS).forEach(([task, def]) => tasksByCategory[def.type].push(task));
+    TASK_CATEGORIES.forEach(category => {
+        const categoryDiv = document.createElement('div');
+        categoryDiv.innerHTML = `<div class="task-category-title">${category}</div>`;
+        const tasksDiv = document.createElement('div');
+        tasksByCategory[category].forEach(task => {
+            const taskItem = document.createElement('span');
+            taskItem.className = 'task-item';
+            taskItem.innerText = task;
+            if (task === currentTask) taskItem.classList.add('selected');
+            taskItem.addEventListener('click', () => {
+                document.querySelectorAll('#task-selector-content .task-item.selected').forEach(el => el.classList.remove('selected'));
+                taskItem.classList.add('selected');
+                selectedTaskInEditor = task;
+                updateTaskInfo(task);
+            });
+            tasksDiv.appendChild(taskItem);
+        });
+        categoryDiv.appendChild(tasksDiv);
+        taskSelectorContent.appendChild(categoryDiv);
+    });
+    const clearItem = document.createElement('span');
+    clearItem.className = 'task-item';
+    clearItem.innerText = '清空';
+    if (!currentTask) clearItem.classList.add('selected');
+    clearItem.addEventListener('click', () => {
+        document.querySelectorAll('#task-selector-content .task-item.selected').forEach(el => el.classList.remove('selected'));
+        clearItem.classList.add('selected');
+        selectedTaskInEditor = '';
+        updateTaskInfo('');
+    });
+    taskSelectorContent.appendChild(document.createElement('hr'));
+    taskSelectorContent.appendChild(clearItem);
+}
+function updateTaskInfo(task) {
+    if (task && TASK_DEFS[task]) {
+        taskNameSpan.innerText = `修程: ${task}`;
+        taskManhoursSpan.innerText = `工时: ${TASK_DEFS[task].manHours}h`;
+    } else {
+        taskNameSpan.innerText = '修程: 无';
+        taskManhoursSpan.innerText = '工时: 0h';
+    }
+}
+function confirmCellEditing() {
+    if (!currentEditingCell) return;
+    const newTask = selectedTaskInEditor;
+    if (state.currentView === 'monthly') {
+        const { vehicle, day, element } = currentEditingCell;
+        updateMonthlySchedule(vehicle, day, newTask);
+        element.innerText = newTask || '';
+        const row = element.parentElement;
+        const vehicleSummary = state.monthlyData.vehicleSummary[vehicle];
+        TASK_CATEGORIES.forEach((cat, i) => { row.cells[row.cells.length - TASK_CATEGORIES.length + i].innerText = vehicleSummary[cat]; });
+    } else {
+        const { vehicle, month, taskType, taskIndex, element } = currentEditingCell;
+        updateAnnualSchedule(vehicle, month, taskType, taskIndex, newTask);
+        renderCurrentView(); // Full re-render for annual is safer
+    }
+    renderLoadChart();
+    renderInfoPanel(); 
+    clearCellEditor();
+}
+function clearCellEditor() {
+    currentEditingCell = null;
+    cellEditor.style.display = 'none';
+    selectedTaskInEditor = null;
+}
+
+
+// --- 8. Modal Management ---
+// ... (modal functions remain the same)
+function showModal(modalEl) { modalEl.classList.add('visible'); }
+function hideModal(modalEl) { modalEl.classList.remove('visible'); }
+
+function showSchedulingModal(type) {
+    if (type === 'monthly' && state.currentView !== 'monthly') {
+        alert('请先进入月度视图再执行月度预排。');
+        return;
+    }
+    
+    schedulingModalTitle.textContent = type === 'annual' ? '预排年计划' : '预排月计划';
+    schedulingLabel.textContent = type === 'annual' ? '选择年份' : '选择年月';
+    schedulingInput.value = type === 'annual' ? state.currentDate.getFullYear() : `${state.currentDate.getFullYear()}-${String(state.currentDate.getMonth() + 1).padStart(2, '0')}`;
+    
+    schedulingForm.style.display = 'block';
+    schedulingProgressContainer.style.display = 'none';
+    
+    schedulingConfirmBtn.onclick = () => {
+        const value = schedulingInput.value;
+        if (type === 'annual') {
+            const year = parseInt(value, 10);
+            if (!/^\d{4}$/.test(value) || isNaN(year)) { alert('请输入有效的四位数年份。'); return; }
+            startProgressSimulation(() => { state.currentDate.setFullYear(year); initializePlatform(); });
+        } else {
+            const parts = value.split('-');
+            const year = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1;
+            if (parts.length !== 2 || isNaN(year) || isNaN(month) || month < 0 || month > 11) { alert('请输入有效的年月格式 (例如: 2025-06)。'); return; }
+            startProgressSimulation(() => {
+                const currentYear = state.currentDate.getFullYear();
+                state.currentDate.setFullYear(year);
+                if (year !== currentYear) { generateAnnualData(year); }
+                navigateTo('monthly', month);
+            });
+        }
+    };
+    showModal(schedulingModal);
+}
+
+function startProgressSimulation(callback) {
+    schedulingForm.style.display = 'none';
+    schedulingProgressContainer.style.display = 'block';
+    let progress = 0;
+    schedulingProgressBar.style.width = '0%';
+    schedulingProgressBar.textContent = '0%';
+    const interval = setInterval(() => {
+        progress += Math.floor(Math.random() * 10) + 5;
+        if (progress >= 100) {
+            progress = 100;
+            clearInterval(interval);
+            setTimeout(() => { hideModal(schedulingModal); callback(); }, 300);
+        }
+        schedulingProgressBar.style.width = `${progress}%`;
+        schedulingProgressBar.textContent = `${progress}%`;
+    }, 100);
+}
+
+function showYearSelectorModal() {
+    yearSelectorList.innerHTML = '';
+    const currentYear = state.currentDate.getFullYear();
+    for (let i = currentYear - 5; i <= currentYear + 2; i++) {
+        const li = document.createElement('li');
+        li.textContent = `${i}年`;
+        li.dataset.year = i;
+        if (i === currentYear) { li.classList.add('current'); }
+        li.addEventListener('click', () => {
+            state.currentDate.setFullYear(i);
+            initializePlatform();
+            hideModal(yearSelectorModal);
+        });
+        yearSelectorList.appendChild(li);
+    }
+    showModal(yearSelectorModal);
+}
+
+
+// --- 9. 事件监听 ---
+// ... (buildGridMap and most of setupInteractions remain the same)
+function buildGridMap(table) {
+    const map = [];
+    Array.from(table.rows).forEach((row, rowIndex) => {
+        if (!map[rowIndex]) map[rowIndex] = [];
+        let colIndex = 0;
+        Array.from(row.cells).forEach(cell => {
+            while (map[rowIndex][colIndex]) colIndex++;
+            for (let r = 0; r < cell.rowSpan; r++) {
+                for (let c = 0; c < cell.colSpan; c++) {
+                    if (!map[rowIndex + r]) map[rowIndex + r] = [];
+                    map[rowIndex + r][colIndex + c] = { cell, startRow: rowIndex, startCol: colIndex };
+                }
+            }
+            colIndex += cell.colSpan;
+        });
+    });
+    return map;
+}
+
+function setupInteractions() {
+    importDataBtn.addEventListener('click', () => alert('导入数据功能待实现。'));
+    exportDataBtn.addEventListener('click', () => alert('导出数据功能待实现。'));
+    preScheduleAnnualBtn.addEventListener('click', () => showSchedulingModal('annual'));
+    preScheduleMonthlyBtn.addEventListener('click', () => showSchedulingModal('monthly'));
+    backToAnnualBtnEl.addEventListener('click', () => navigateTo('annual'));
+    document.querySelector('#main-title').addEventListener('click', (e) => {
+        if (e.target.id === 'title-year-btn') navigateTo('annual');
+    });
+
+    leftPanelContainerEl.addEventListener('click', (e) => {
+        const target = e.target.closest('button, .month-cell');
+        if (!target) return;
+        if (target.id === 'change-year-btn') {
+            showYearSelectorModal();
+        } else if (target.classList.contains('arrow-btn')) {
+            const direction = target.id === 'prev-btn' ? -1 : 1;
+            if (state.currentView === 'annual') {
+                state.currentDate.setFullYear(state.currentDate.getFullYear() + direction);
+                initializePlatform();
+            } else {
+                const currentYear = state.currentDate.getFullYear();
+                state.currentDate.setMonth(state.currentDate.getMonth() + direction);
+                if (state.currentDate.getFullYear() !== currentYear) generateAnnualData(state.currentDate.getFullYear());
+                navigateTo('monthly', state.currentDate.getMonth());
+            }
+        } else if (target.classList.contains('month-cell')) {
+            navigateTo('monthly', parseInt(target.dataset.monthIndex));
+        }
+    });
+    
+    scheduleTableContainerEl.addEventListener('click', (e) => {
+        const target = e.target.closest('td, th');
+        if (!target) return;
+        if (target.classList.contains('drill-down')) { navigateTo('monthly', parseInt(target.dataset.month)); return; }
+        const table = target.closest('table');
+        if (!table) return;
+        if (!gridMap || !gridMap.table || !table.contains(gridMap.table)) { gridMap = { table, map: buildGridMap(table) }; }
+        document.querySelectorAll('.highlight-row, .highlight-column, .highlight-cell').forEach(el => el.classList.remove('highlight-row', 'highlight-column', 'highlight-cell'));
+        let clickedCellInfo = null;
+        for (let r = 0; r < gridMap.map.length; r++) {
+            for (let c = 0; c < gridMap.map[r].length; c++) {
+                if (gridMap.map[r][c] && gridMap.map[r][c].cell === target) { clickedCellInfo = gridMap.map[r][c]; break; }
+            }
+            if (clickedCellInfo) break;
+        }
+        if (!clickedCellInfo) return;
+        const { startRow, startCol } = clickedCellInfo;
+        for (let r = 0; r < gridMap.map.length; r++) { if (gridMap.map[r]?.[startCol]) gridMap.map[r][startCol].cell.classList.add('highlight-column'); }
+        for (let c = 0; c < gridMap.map[startRow]?.length; c++) { if (gridMap.map[startRow]?.[c]) gridMap.map[startRow][c].cell.classList.add('highlight-row'); }
+        target.classList.add('highlight-cell');
+        if (target.tagName === 'TD' && ((state.currentView === 'monthly' && target.dataset.day) || (state.currentView === 'annual' && target.dataset.vehicle))) {
+            startCellEditing(target);
+        }
+    });
+
+    editorConfirmBtn.addEventListener('click', confirmCellEditing);
+    editorCancelBtn.addEventListener('click', clearCellEditor);
+    schedulingCancelBtn.addEventListener('click', () => hideModal(schedulingModal));
+    yearSelectorCloseBtn.addEventListener('click', () => hideModal(yearSelectorModal));
+    
+    document.addEventListener('click', (e) => {
+        const target = e.target;
+        if (!target.closest('.modal-content') && !target.closest('.toolbar-buttons button') && !target.closest('#change-year-btn')) {
+            if (schedulingModal.classList.contains('visible')) hideModal(schedulingModal);
+            if (yearSelectorModal.classList.contains('visible')) hideModal(yearSelectorModal);
+        }
+        if (!cellEditor.contains(target) && !target.closest('td, th')) {
+            clearCellEditor();
+            document.querySelectorAll('.highlight-row, .highlight-column, .highlight-cell').forEach(el => el.classList.remove('highlight-row', 'highlight-column', 'highlight-cell'));
+        }
+    });
+
+    infoPanelEl.addEventListener('click', e => {
+        const target = e.target.closest('.clickable-stat');
+        if (!target) return;
+
+        const { time, vehicle } = target.dataset;
+        document.querySelectorAll('.highlight-row, .highlight-column, .highlight-cell').forEach(el => el.classList.remove('highlight-row', 'highlight-column', 'highlight-cell'));
+        document.querySelectorAll('[class*="highlight-specific-"]').forEach(el => {
+            const cls = el.className.match(/highlight-specific-\S+/g);
+            if (cls) cls.forEach(c => el.classList.remove(c));
+        });
+
+        if (state.highlightedTaskType && time) {
+            const selector = state.currentView === 'annual' ? `tr[data-month-row="${time}"] td.highlight-task-${state.highlightedTaskType}` : `td[data-day="${time}"].highlight-task-${state.highlightedTaskType}`;
+            document.querySelectorAll(selector).forEach(cell => cell.classList.add(`highlight-specific-${state.highlightedTaskType}`));
+        } else if (state.highlightedTaskType && vehicle) {
+            const selector = state.currentView === 'annual' ? `td[data-vehicle="${vehicle}"].highlight-task-${state.highlightedTaskType}` : `tr[data-vehicle-row="${vehicle}"] td.highlight-task-${state.highlightedTaskType}`;
+            document.querySelectorAll(selector).forEach(cell => cell.classList.add(`highlight-specific-${state.highlightedTaskType}`));
+        }
+    });
+
+}
+
+// --- 10. 初始化 ---
+function initializePlatform() {
+    state.annualData = generateAnnualData(state.currentDate.getFullYear());
+    navigateTo('annual');
+}
+
+// --- 11. LLM CHAT INTEGRATION ---
+const llmChatPanel = document.getElementById('llm-chat-panel');
+const chatToggleTab = document.getElementById('chat-toggle-tab');
+const chatMessages = document.getElementById('chat-messages');
+const chatInputForm = document.getElementById('chat-input-form');
+const chatInput = document.getElementById('chat-input');
+const chatUploadBtn = document.getElementById('chat-upload-btn');
+const fileInput = document.getElementById('file-input');
+const chatHelpBtn = document.getElementById('chat-help-btn');
+
+// ... (setupChatInteractions and other chat functions are modified)
+function setupChatInteractions() {
+    const toggleChatPanel = () => {
+        const isCollapsed = llmChatPanel.classList.toggle('collapsed');
+        if (!isCollapsed) {
+            chatInput.focus();
+        }
+        setTimeout(() => chartInstance && chartInstance.resize(), 350);
+    };
+
+    chatToggleTab.addEventListener('click', toggleChatPanel);
+    
+    document.getElementById('chat-header').addEventListener('click', (e) => {
+        if (!e.target.closest('#chat-help-btn')) {
+            toggleChatPanel();
+        }
+    });
+
+    chatInputForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        handleSendMessage();
+    });
+
+    chatUploadBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', handleFileUpload);
+    
+    chatHelpBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        showHelpGuide();
+    });
+
+    chatMessages.addEventListener('click', (e) => {
+        const canvasCard = e.target.closest('.canvas-card');
+        if (canvasCard && !canvasCard.classList.contains('applied')) {
+            handleCanvasClick(canvasCard);
+        }
+    });
+}
+
+function handleSendMessage() {
+    const messageText = chatInput.value.trim();
+    if (messageText === '') return;
+    addMessageToChat(messageText, 'user');
+    chatInput.value = '';
+    respondToMessage(messageText);
+}
+
+function handleFileUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const messageText = `文件: ${file.name}`;
+    addMessageToChat(messageText, 'user');
+    fileInput.value = ''; 
+    respondToMessage("导入数据");
+}
+
+function handleCanvasClick(canvasCard) {
+    const { action, year, month, types } = canvasCard.dataset;
+    
+    appContainer.classList.add('applying-canvas-animation');
+    setTimeout(() => appContainer.classList.remove('applying-canvas-animation'), 1000);
+
+    canvasCard.classList.add('applied');
+    canvasCard.querySelector('.canvas-header').innerHTML += ' (已应用)';
+
+    setTimeout(() => {
+        if (action === 'apply-plan') {
+            const newYear = parseInt(year, 10);
+            const newMonth = parseInt(month, 10);
+            const scheduledTypes = types ? types.split(',') : TASK_CATEGORIES;
+
+            state.currentDate.setFullYear(newYear);
+            
+            if (newMonth > -1) {
+                state.annualData = generateAnnualData(newYear, scheduledTypes);
+                state.monthlyData = generateMonthlyData(scheduledTypes);
+                navigateTo('monthly', newMonth);
+            } else {
+                state.annualData = generateAnnualData(newYear, scheduledTypes);
+                navigateTo('annual');
+            }
+            
+            const remainingTypes = TASK_CATEGORIES.filter(t => !scheduledTypes.includes(t));
+            if (remainingTypes.length > 0) {
+                 state.schedulingContext = { year: newYear, month: newMonth, scheduledTypes: scheduledTypes };
+                 addMessageToChat(`好的，${scheduledTypes.join('、')}已排程完毕。接下来需要排什么修程？（剩余：${remainingTypes.join('、')}）`, 'model');
+            } else {
+                state.schedulingContext = null;
+                addMessageToChat(`好的，${year}年${month > -1 ? (newMonth+1)+'月' : ''}的所有计划已在主界面上显示。`, 'model');
+            }
+        }
+    }, 500);
+}
+
+
+function addMessageToChat(html, type, isThinking = false) {
+    const messageEl = document.createElement('div');
+    messageEl.classList.add('chat-message', type);
+    if (isThinking) {
+        messageEl.innerHTML = `<div class="thinking-indicator"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
+    } else {
+        messageEl.innerHTML = html;
+    }
+    chatMessages.appendChild(messageEl);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    return messageEl;
+}
+
+function highlightElement(element) {
+    if (!element) return;
+    element.classList.add('highlight-effect');
+    setTimeout(() => {
+        element.classList.remove('highlight-effect');
+    }, 1500);
+}
+
+async function simulateThinkingAndGenerateCanvas(action, params) {
+    const scheduledTypes = params.types || TASK_CATEGORIES;
+    const thinkingSteps = {
+        '预排年计划': [
+            `收到指令：预排 ${params.year} 年计划 (${scheduledTypes.join('、')})。`,
+            "分析需求：需要为所有车辆生成全年的任务...",
+            "正在根据历史数据和维修规则进行计算...",
+            "任务分配完成，正在生成可视化看板..."
+        ],
+        '预排月计划': [
+            `收到指令：预排 ${params.year}年 ${params.month + 1}月 计划 (${scheduledTypes.join('、')})。`,
+            "分析需求：需要为指定月份分配具体任务日期...",
+            "正在进行任务分解与工时计算...",
+            "月度计划生成完毕..."
+        ],
+        '导入数据': [
+            "收到数据导入指令。",
+            "正在解析文件格式格式...",
+            "校验数据完整性与准确性...",
+            "数据已准备就绪，可加载至视图..."
+        ]
+    };
+
+    const steps = thinkingSteps[action];
+    if (!steps) return;
+    
+    const thinkingEl = addMessageToChat('', 'model', true);
+    
+    for (const step of steps) {
+        await new Promise(resolve => setTimeout(resolve, 600 + Math.random() * 400));
+        thinkingEl.innerHTML = step;
+    }
+    
+    await new Promise(resolve => setTimeout(resolve, 800));
+    thinkingEl.remove();
+
+    const canvasId = `canvas-${Date.now()}`;
+    const canvasTitle = action === '导入数据' ? '导入的数据' : `${params.year}年${params.month > -1 ? (params.month+1)+'月' : ''}计划`;
+    const canvasDetails = action === '导入数据' ? '点击应用数据到当前视图' : `点击将此计划应用到主界面`;
+
+    const canvasHTML = `
+        <div class="canvas-card" id="${canvasId}" 
+             data-action="apply-plan" 
+             data-year="${params.year}" 
+             data-month="${params.month}"
+             data-types="${scheduledTypes.join(',')}"
+        >
+            <div class="canvas-header">
+                <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 0 24 24" width="18px" fill="#3f51b5"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                <span>${canvasTitle} (${scheduledTypes.join('、')})</span>
+            </div>
+            <div class="canvas-details">${canvasDetails}</div>
+        </div>
+    `;
+    addMessageToChat(canvasHTML, 'model');
+}
+
+
+function parseCommandAndRespond(text) {
+    const lowerCaseText = text.toLowerCase();
+    
+    // --- Follow-up scheduling step ---
+    const followUpMatch = text.match(/(再排|然后排|接着排|继续排)(的)?(均衡修|特别修|专项修)/);
+    if (followUpMatch && state.schedulingContext) {
+        const newType = followUpMatch[3];
+        const { year, month, scheduledTypes } = state.schedulingContext;
+        
+        if (scheduledTypes.includes(newType)) {
+            return `"${newType}" 已经包含在当前的排程计划中了。`;
+        }
+
+        const newTypes = [...scheduledTypes, newType];
+        const action = month > -1 ? '预排月计划' : '预排年计划';
+        
+        simulateThinkingAndGenerateCanvas(action, { year, month, types: newTypes });
+        return null;
+    }
+
+    const highlightMatch = text.match(/(高亮|分析)(均衡修|特别修|专项修)/);
+    if(highlightMatch) {
+        const taskType = highlightMatch[2];
+        highlightTaskType(taskType);
+        return `好的，已高亮所有"${taskType}"任务，并在左侧面板生成了专项分析报告。`;
+    }
+
+    // --- Initial scheduling step ---
+    const preScheduleMatch = text.match(/(预排|先排|只排)(\d{4}年)?(\d{1,2}月)?(的)?(均衡修|特别修|专项修)/);
+    if (preScheduleMatch) {
+        state.schedulingContext = null; // New plan resets context
+        const year = preScheduleMatch[2] ? preScheduleMatch[2].replace('年', '') : state.currentDate.getFullYear();
+        const month = preScheduleMatch[3] ? parseInt(preScheduleMatch[3].replace('月',''), 10) - 1 : -1;
+        const types = [preScheduleMatch[5]];
+        const action = month > -1 ? '预排月计划' : '预排年计划';
+        simulateThinkingAndGenerateCanvas(action, { year, month, types });
+        return null; 
+    }
+
+    if (text.includes('预排')) {
+        const yearMatchFull = text.match(/(\d{4})年/);
+        const monthMatchFull = text.match(/(\d{1,2})月/);
+        const year = yearMatchFull ? yearMatchFull[1] : state.currentDate.getFullYear();
+        const month = monthMatchFull ? parseInt(monthMatchFull[1],10) - 1 : -1;
+        const action = month > -1 ? '预排月计划' : '预排年计划';
+        simulateThinkingAndGenerateCanvas(action, { year, month, types: TASK_CATEGORIES });
+        return null;
+    }
+
+
+    if (text === '导入数据') {
+        simulateThinkingAndGenerateCanvas('导入数据', { year: state.currentDate.getFullYear(), month: state.selectedMonth });
+        return null;
+    }
+    
+    // --- Simple UI ACTION COMMANDS ---
+    const yearMatch = lowerCaseText.match(/(\d{4})/);
+    if (yearMatch) {
+        const year = parseInt(yearMatch[1], 10);
+        state.currentDate.setFullYear(year);
+        initializePlatform();
+        setTimeout(() => highlightElement(document.getElementById('change-year-btn')), 100);
+        return `好的，已切换到 ${year} 年的年度计划视图。`;
+    }
+
+    const monthMatch = lowerCaseText.match(/(\d{1,2})月/);
+    if (monthMatch) {
+        const month = parseInt(monthMatch[1], 10);
+        if (month >= 1 && month <= 12) {
+            navigateTo('monthly', month - 1);
+            setTimeout(() => highlightElement(document.querySelector('.month-cell.current-month')), 100);
+            return `好的，已切换到 ${month} 月的计划视图。`;
+        }
+    }
+    
+    if (lowerCaseText.includes('年视图') || lowerCaseText.includes('年度计划')) {
+        navigateTo('annual');
+        setTimeout(() => highlightElement(document.getElementById('title-text')), 100);
+        return '好的，已返回年度计划视图。';
+    }
+
+    // --- DATA QUERY COMMANDS ---
+    if (lowerCaseText.includes('多少任务') || lowerCaseText.includes('任务总数')) {
+        const stats = getPlanStats();
+        const viewText = state.currentView === 'annual' ? '本年度' : '本月';
+        return `根据当前视图，${viewText}共有 ${stats.totalTasks} 个任务。`;
+    }
+    
+    if (lowerCaseText.includes('最忙') || lowerCaseText.includes('最繁忙')) {
+        const stats = getPlanStats();
+        const periodText = state.currentView === 'annual' ? '月份' : '日期';
+        return `当前视图中最繁忙的${periodText}是 ${stats.busiestPeriod}，总工时约为 ${stats.maxHours} 小时。`;
+    }
+    
+    if (lowerCaseText.includes('帮助') || text === '?') {
+        return showHelpGuide(false);
+    }
+
+    return `抱歉，我暂时无法理解该指令。您可以试试点击 "?" 按钮查看可用指令。`;
+}
+
+function respondToMessage(messageText) {
+    const responseText = parseCommandAndRespond(messageText);
+    if (responseText) {
+        const thinkingEl = addMessageToChat('', 'model', true);
+        setTimeout(() => {
+            thinkingEl.remove();
+            addMessageToChat(responseText, 'model');
+        }, 800 + Math.random() * 400);
+    }
+}
+
+function showHelpGuide(addToChat = true) {
+    const guideText = `
+        您可以尝试以下指令：<br>
+        <ul>
+          <li><b>预排2026年计划</b> - 生成新的年度计划</li>
+          <li><b>先排2025年8月的均衡修</b> - 分步排程</li>
+          <li><b>高亮特别修</b> - 高亮并分析特定修程</li>
+          <li><b>切换到5月</b> - 查看当前年份的指定月份</li>
+          <li><b>今年有多少任务?</b> - 查询当前视图总任务数</li>
+        </ul>
+    `;
+    if (addToChat) {
+      addMessageToChat(guideText, 'model');
+    }
+    return guideText;
+}
+
+// --- NEW ANALYSIS AND HIGHLIGHTING FUNCTIONS ---
+
+function clearTaskHighlights() {
+    state.highlightedTaskType = null;
+    document.querySelectorAll('[class*="highlight-task-"]').forEach(el => {
+        el.className = el.className.replace(/highlight-task-\S+/g, '').trim();
+    });
+    document.querySelectorAll('[class*="highlight-specific-"]').forEach(el => {
+        const cls = el.className.match(/highlight-specific-\S+/g);
+        if (cls) cls.forEach(c => el.classList.remove(c));
+    });
+    const analysisPanel = document.getElementById('analysis-panel');
+    if (analysisPanel) {
+        analysisPanel.remove();
+    }
+}
+
+function highlightTaskType(taskType, fromUser = true) {
+    clearTaskHighlights();
+    state.highlightedTaskType = taskType;
+
+    const table = scheduleTableContainerEl.querySelector('table');
+    if (!table) return;
+
+    table.querySelectorAll('td').forEach(cell => {
+        const taskCode = cell.textContent.trim();
+        if (taskCode && TASK_DEFS[taskCode] && TASK_DEFS[taskCode].type === taskType) {
+            cell.classList.add(`highlight-task-${taskType}`);
+        }
+    });
+    
+    if(fromUser) {
+        analyzeAndRenderTaskStats(taskType);
+    }
+}
+
+function analyzeAndRenderTaskStats(taskType) {
+    const stats = { time: {}, vehicle: {} };
+    const allTimeValues = [];
+    
+    // 1. Collect Data
+    if (state.currentView === 'annual') {
+        for (let m = 0; m < 12; m++) stats.time[m] = 0;
+        VEHICLES.forEach(v => stats.vehicle[v] = 0);
+
+        Object.values(state.annualData.schedule).forEach((monthData, monthIndex) => {
+            Object.entries(monthData).forEach(([vehicle, vehicleTasks]) => {
+                Object.values(vehicleTasks).flat().forEach(taskCode => {
+                    const taskDef = TASK_DEFS[taskCode];
+                    if (taskDef && taskDef.type === taskType) {
+                        stats.time[monthIndex] += taskDef.manHours;
+                        stats.vehicle[vehicle] += taskDef.manHours;
+                    }
+                });
+            });
+        });
+    } else { // monthly view
+        const daysInMonth = Object.keys(state.monthlyData.dailyManHours).length;
+        for (let d = 1; d <= daysInMonth; d++) stats.time[d] = 0;
+        VEHICLES.forEach(v => stats.vehicle[v] = 0);
+
+        Object.entries(state.monthlyData.schedule).forEach(([key, taskInfo]) => {
+            const [vehicle, day] = key.split('-');
+            if (taskInfo.def.type === taskType) {
+                stats.time[day] += taskInfo.def.manHours;
+                stats.vehicle[vehicle] += taskInfo.def.manHours;
+            }
+        });
+    }
+
+    // 2. Analyze & Build HTML
+    const timeValues = Object.values(stats.time).filter(v => v > 0);
+    const vehicleValues = Object.values(stats.vehicle).filter(v => v > 0);
+    const timeAvg = timeValues.length ? timeValues.reduce((a, b) => a + b, 0) / timeValues.length : 0;
+    const vehicleAvg = vehicleValues.length ? vehicleValues.reduce((a, b) => a + b, 0) / vehicleValues.length : 0;
+    
+    const buildList = (data, average, isTime) => {
+        return Object.entries(data).sort((a,b) => b[1] - a[1]).slice(0, 5).map(([key, value]) => {
+            let label = isTime ? (state.currentView === 'annual' ? `${parseInt(key)+1}月` : `${key}日`) : `车号 ${key}`;
+            let deviationClass = '';
+            if (value > average * 1.5) deviationClass = 'stat-high';
+            else if (value < average * 0.5) deviationClass = 'stat-low';
+            return `<li><span class="clickable-stat" data-${isTime ? 'time' : 'vehicle'}="${key}">${label}</span> <span class="stat-value ${deviationClass}">${value}h</span></li>`;
+        }).join('');
+    };
+    
+    const timeListHTML = buildList(stats.time, timeAvg, true);
+    const vehicleListHTML = buildList(stats.vehicle, vehicleAvg, false);
+
+    const analysisHTML = `
+        <div id="analysis-panel">
+            <h4>"${taskType}"专项分析</h4>
+            <div class="analysis-section">
+                <strong>按${state.currentView === 'annual' ? '月份' : '日期'} (工时Top 5):</strong>
+                <ul class="analysis-list">${timeListHTML || '<li>无数据</li>'}</ul>
+            </div>
+            <div class="analysis-section">
+                <strong>按车辆 (工时Top 5):</strong>
+                <ul class="analysis-list">${vehicleListHTML || '<li>无数据</li>'}</ul>
+            </div>
+        </div>
+    `;
+    
+    infoPanelEl.insertAdjacentHTML('beforeend', analysisHTML);
+}
+
+// --- INITIALIZATION ---
+document.addEventListener('DOMContentLoaded', () => {
+    setupInteractions();
+    setupChatInteractions();
+    initializePlatform();
+    // Initially collapse the panel
+    llmChatPanel.classList.add('collapsed');
+
+    window.addEventListener('resize', () => {
+        if (chartInstance) {
+            chartInstance.resize();
+        }
+    });
+});
+</script>
+</body>
+</html>

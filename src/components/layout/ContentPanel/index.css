@@ -1,0 +1,33 @@
+/* 内容面板样式 */
+#content-panel {
+	flex-grow: 1;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	gap: 10px;
+	transition: width 0.3s ease-in-out;
+}
+
+#schedule-table-container {
+	flex-grow: 1;
+	overflow: auto;
+	background: #fff;
+	border-radius: 8px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+#load-chart-container {
+	flex-shrink: 0;
+	height: 220px;
+	display: flex;
+	flex-direction: column;
+	background: #fff;
+	border-radius: 8px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	padding: 10px;
+}
+
+#load-chart {
+	flex-grow: 1;
+	width: 100%;
+}

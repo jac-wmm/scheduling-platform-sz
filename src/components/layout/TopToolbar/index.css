@@ -1,0 +1,67 @@
+/* 顶部工具栏样式 */
+#top-toolbar {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0 10px 10px 10px;
+	border-bottom: 2px solid #3f51b5;
+	flex-shrink: 0;
+}
+
+#main-title {
+	margin: 0;
+	font-size: 1.4em;
+	color: #1a237e;
+	flex-grow: 1;
+	text-align: center;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 15px;
+}
+
+.toolbar-buttons {
+	display: flex;
+	gap: 10px;
+}
+
+.toolbar-buttons button {
+	padding: 6px 12px;
+	font-size: 13px;
+	background-color: #fff;
+	color: #3f51b5;
+	border: 1px solid #3f51b5;
+	border-radius: 5px;
+	cursor: pointer;
+	transition: all 0.2s;
+}
+
+.toolbar-buttons button:hover {
+	background-color: #e8eaf6;
+}
+
+#back-to-annual-btn {
+	background: none;
+	border: 1px solid #c5cae9;
+	color: #3f51b5;
+	border-radius: 50%;
+	width: 30px;
+	height: 30px;
+	line-height: 28px;
+	font-size: 20px;
+	cursor: pointer;
+	display: none;
+	transition: all 0.2s;
+	align-items: center;
+	justify-content: center;
+}
+
+#back-to-annual-btn:hover {
+	background-color: #e8eaf6;
+}
+
+.modal-content-container{
+	display: inline-flex;
+	align-items: center;
+	margin: 16px 0;
+}
