@@ -77,7 +77,7 @@ const LLMChatPanel = ({ collapsed, onToggle }) => {
 		} else if (text.includes('导入数据')) {
 			params.action = '导入数据';
 		} else {
-			params.action = 'other';
+			params.action = '';
 		}
 
 		return params;
@@ -107,15 +107,47 @@ const LLMChatPanel = ({ collapsed, onToggle }) => {
 
 		const steps = thinkingSteps[stepsKey];
 
-		// 逐步显示思考步骤
-		for (const step of steps) {
-			await new Promise((resolve) => setTimeout(resolve, 600 + Math.random() * 400));
-			setThinkingStep(step);
+		// 字符级别流式输出函数
+		const typeCharacter = async (text, currentIndex = 0, fullText = '') => {
+			if (currentIndex < text.length) {
+				// 添加当前字符到完整文本
+				const newFullText = fullText + text[currentIndex];
+				setThinkingStep(newFullText);
+				// 随机延迟模拟打字速度变化
+				const delay = 30 + Math.random() * 20;
+				await new Promise(resolve => setTimeout(resolve, delay));
+				// 继续输出下一个字符
+				await typeCharacter(text, currentIndex + 1, newFullText);
+			}
+		};
+
+		// 流式输出所有思考步骤
+		let accumulatedText = '';
+		for (let i = 0; i < steps.length; i++) {
+			const step = steps[i];
+			// 如果不是第一个步骤，先添加换行符
+			if (i > 0) {
+				accumulatedText += '\n';
+				setThinkingStep(accumulatedText);
+				await new Promise(resolve => setTimeout(resolve, 200)); // 步骤之间的短暂停顿
+			}
+			
+			// 流式输出当前步骤的文本
+			await typeCharacter(step, 0, accumulatedText);
+			// 更新累积的文本
+			accumulatedText += step;
 		}
 
+		// 保存完整的思考过程文本（使用局部变量确保值不会丢失）
+		const completeThinkingProcess = accumulatedText;
+		
 		// 思考完成，等待最终响应
-		await new Promise((resolve) => setTimeout(resolve, 800));
+		await new Promise((resolve) => setTimeout(resolve, 500));
+		// 保留思考过程，只隐藏指示器
 		setIsThinking(false);
+		// 将完整的思考过程添加到聊天记录
+		addMessageToChat(completeThinkingProcess, 'thinking');
+		// 清空思考步骤状态
 		setThinkingStep('');
 
 		// 对于预排计划和导入数据，生成可视化卡片并添加到聊天记录
@@ -267,7 +299,7 @@ const LLMChatPanel = ({ collapsed, onToggle }) => {
 				className={collapsed ? 'collapsed' : ''}
 			>
 				<div id='chat-header'>
-					<span>计划排程智能体</span>
+					<span>AI计划员</span>
 					<button
 						id='chat-help-btn'
 						onClick={showHelp}
@@ -338,7 +370,7 @@ const LLMChatPanel = ({ collapsed, onToggle }) => {
 				onClick={onToggle}
 				title={collapsed ? '打开智能体' : '关闭智能体'}
 			>
-				排程智能体
+				AI计划员
 			</div>
 		</>
 	);

@@ -357,12 +357,9 @@ export const ScheduleProvider = ({ children }) => {
 		}
 	};
 
-	// 移除预排计划相关函数
-
 	// 发送聊天消息
 	const sendChatMessage = (message) => {
 		if (!message.trim()) return;
-
 		// 添加用户消息
 		setChatMessages((prev) => [...prev, { type: 'user', content: message }]);
 
@@ -391,16 +388,19 @@ export const ScheduleProvider = ({ children }) => {
 			}
 			// 切换到年度视图
 			else if (lowerCaseText.includes('年视图') || lowerCaseText.includes('年度计划')) {
+				setHighlightedTaskType(null); // 取消高亮
 				setCurrentView('annual');
 				response = '好的，已返回年度计划视图。';
 			}
 			// 切换到月度视图
 			else if (lowerCaseText.includes('月视图') || lowerCaseText.includes('月度计划')) {
+				setHighlightedTaskType(null); // 取消高亮
 				setCurrentView('monthly');
 				response = '好的，已切换到月度计划视图。';
 			}
 			// 切换年份
 			else if (lowerCaseText.match(/\d{4}/)) {
+				setHighlightedTaskType(null); // 取消高亮
 				const yearMatch = lowerCaseText.match(/(\d{4})/);
 				if (yearMatch) {
 					const year = parseInt(yearMatch[1], 10);
@@ -420,24 +420,69 @@ export const ScheduleProvider = ({ children }) => {
 						response = `好的，已切换到 ${month} 月的计划视图。`;
 					}
 				}
+				setHighlightedTaskType(null); // 取消高亮
 			}
 			// 查询任务数量
 			else if (lowerCaseText.includes('多少任务') || lowerCaseText.includes('任务总数')) {
+				setHighlightedTaskType(null); // 取消高亮
 				// 模拟获取统计数据
-				const totalTasks = currentView === 'annual' ? annualData.tasks?.length || 0 : monthlyData.tasks?.length || 0;
+				let totalTasks = 0;
+				if (lowerCaseText.includes('年') || currentView === 'annual') {
+					for (let m = 0; m < 12; m++) {
+						const tasksInMonth = annualData.schedule[`${currentYear}-${m}`];
+						if (tasksInMonth) {
+							totalTasks += Object.values(tasksInMonth)
+								.flatMap((v) => Object.values(v))
+								.flat().length;
+						}
+					}
+				} else {
+					totalTasks = Object.keys(monthlyData.schedule).length;
+				}
 				const viewText = currentView === 'annual' ? '本年度' : '本月';
 				response = `根据当前视图，${viewText}共有 ${totalTasks} 个任务。`;
 			}
 			// 查询最忙时期
 			else if (lowerCaseText.includes('最忙') || lowerCaseText.includes('最繁忙')) {
-				// 模拟获取最忙时期数据
+				setHighlightedTaskType(null); // 取消高亮
+				// 根据实际数据计算最忙时期
 				const periodText = currentView === 'annual' ? '月份' : '日期';
-				const busiestPeriod = currentView === 'annual' ? '6月' : '15日';
-				const maxHours = 120;
-				response = `当前视图中最繁忙的${periodText}是 ${busiestPeriod}，总工时约为 ${maxHours} 小时。`;
+				let busiestPeriod = '';
+				let maxHours = 0;
+
+				if (currentView === 'annual' && annualData.monthlyManHours) {
+					// 计算年度视图中最忙的月份
+					for (let month = 0; month < 12; month++) {
+						if (annualData.monthlyManHours[month]) {
+							const totalHours = Object.values(annualData.monthlyManHours[month]).reduce((sum, hours) => sum + hours, 0);
+							if (totalHours > maxHours) {
+								maxHours = totalHours;
+								busiestPeriod = `${month + 1}月`;
+							}
+						}
+					}
+				} else if (currentView === 'monthly' && monthlyData.dailyManHours) {
+					// 计算月度视图中最忙的日期
+					for (const [day, hoursByType] of Object.entries(monthlyData.dailyManHours)) {
+						const totalHours = Object.values(hoursByType).reduce((sum, hours) => sum + hours, 0);
+						if (totalHours > maxHours) {
+							maxHours = totalHours;
+							busiestPeriod = `${day}日`;
+						}
+					}
+				}
+
+				// 如果没有找到有效数据，使用默认值
+				if (!busiestPeriod) {
+					busiestPeriod = currentView === 'annual' ? '6月' : '15日';
+					maxHours = 0;
+				}
+
+				response = `当前视图中最繁忙的${periodText}是 ${busiestPeriod}，总工时约为 ${maxHours.toFixed(2)} 小时。`;
 			}
 			// 预排计划命令 - 修改为调用TopToolbar中的预排功能
 			else if (text.includes('预排') || text.includes('先排') || text.includes('只排')) {
+				setHighlightedTaskType(null); // 取消高亮
 				// 提取年份和月份信息
 				const yearMatch = text.match(/(\d{4})年/);
 				const monthMatch = text.match(/(\d{1,2})月/);
@@ -471,6 +516,7 @@ export const ScheduleProvider = ({ children }) => {
 			}
 			// 默认回复
 			else {
+				setHighlightedTaskType(null); // 取消高亮
 				response = `抱歉，我暂时无法理解该指令。您可以试试点击 "?" 按钮查看可用指令。`;
 			}
 

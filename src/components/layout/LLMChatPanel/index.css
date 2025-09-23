@@ -268,3 +268,13 @@
 	opacity: 0.8;
 	cursor: default;
 }
+
+/* 添加思考过程消息的样式 */
+.chat-message.thinking {
+	background-color: rgba(158, 158, 158, 0.1);
+    border: 1px solid #ddd;
+    font-size: 13px;
+    font-style: italic;
+    border-radius: 10px;
+    color: #616161;
+}
