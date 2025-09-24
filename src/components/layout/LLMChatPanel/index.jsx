@@ -6,12 +6,11 @@ import './index.css';
 import { generateAnnualData, generateMonthlyData } from '../../../mock/modules/schedule';
 
 const LLMChatPanel = ({ collapsed, onToggle }) => {
-	const { chatMessages, setChatMessages, sendChatMessage, currentYear, setCurrentYear, currentMonth, setCurrentMonth, currentView, setCurrentView, annualData, setAnnualData, monthlyData, setMonthlyData, transformAnnualData, transformMonthlyData } = useContext(ScheduleContext);
+	const { chatMessages, setChatMessages, sendChatMessage, currentYear, setCurrentYear, currentMonth, setCurrentMonth, currentView, setCurrentView, annualData, setAnnualData, monthlyData, setMonthlyData, transformAnnualData, transformMonthlyData,setIsClickCanvasCard,setSchedulingContext } = useContext(ScheduleContext);
 	const inputRef = useRef(null);
 	const messagesEndRef = useRef(null);
 	const [isThinking, setIsThinking] = useState(false);
 	const [thinkingStep, setThinkingStep] = useState('');
-	const [schedulingContext, setSchedulingContext] = useState(null);
 
 	// 自动滚动到底部
 	useEffect(() => {
@@ -164,7 +163,7 @@ const LLMChatPanel = ({ collapsed, onToggle }) => {
 		           data-types="${params.types.join(',')}"
 		      >
 		        <div class="canvas-header">
-		          <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 0 24 24" width="18px" fill="#3f51b5"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+		          <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 0 24 24" width="20px" fill="#3f51b5"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
 		          <span>${canvasTitle} (${params.types.join('、')})</span>
 		        </div>
 		        <div class="canvas-details">${canvasDetails}</div>
@@ -224,11 +223,14 @@ const LLMChatPanel = ({ collapsed, onToggle }) => {
 			const newMonth = parseInt(month, 10);
 			const scheduledTypes = types ? types.split(',') : ['均衡修', '特别修', '专项修'];
 
+			console.log('apply-plan', action, newYear, newMonth, scheduledTypes);
+			
 			// 延迟执行实际应用逻辑
 			setTimeout(() => {
 				if (action === 'apply-plan') {
 					// 设置年份和视图
 					setCurrentYear(newYear);
+					setIsClickCanvasCard(true);
 
 					// 直接调用模拟数据生成函数
 					if (newMonth > -1) {
@@ -236,6 +238,7 @@ const LLMChatPanel = ({ collapsed, onToggle }) => {
 						setCurrentView('monthly');
 						// 生成月度模拟数据
 						const monthlyMockData = generateMonthlyData(newYear, newMonth, scheduledTypes);
+						
 						// 转换数据格式并更新状态
 						if (transformMonthlyData && monthlyMockData) {
 							setMonthlyData(transformMonthlyData(monthlyMockData));
@@ -253,6 +256,9 @@ const LLMChatPanel = ({ collapsed, onToggle }) => {
 					// 检查剩余任务类型
 					const allTaskTypes = ['均衡修', '特别修', '专项修'];
 					const remainingTypes = allTaskTypes.filter((t) => !scheduledTypes.includes(t));
+
+					console.log('remainingTypes', remainingTypes);
+					
 
 					// 设置调度上下文
 					setSchedulingContext(remainingTypes.length > 0 ? { year: newYear, month: newMonth, scheduledTypes: scheduledTypes } : null);

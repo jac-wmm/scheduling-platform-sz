@@ -209,33 +209,6 @@
 #chat-upload-btn:disabled:hover {
 	background-color: transparent;
 }
-
-.canvas-card {
-	background-color: #fff;
-	border: 1px solid #ddd;
-	border-radius: 8px;
-	padding: 10px;
-	margin-top: 5px;
-	cursor: pointer;
-	transition: all 0.2s;
-	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-.canvas-card:hover {
-	border-color: #3f51b5;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-.canvas-header {
-	font-weight: bold;
-	color: #1a237e;
-	margin-bottom: 5px;
-	display: flex;
-	align-items: center;
-	gap: 5px;
-}
-.canvas-details {
-	font-size: 12px;
-	color: #666;
-}
 /* 应用画布动画效果 */
 #app-container.applying-canvas-animation::after {
 	content: '';
@@ -263,18 +236,44 @@
 	}
 }
 
-/* 已应用的卡片样式 */
+.canvas-card {
+	background-color: #fff;
+	border: 1px solid #ddd;
+	border-radius: 8px;
+	padding: 10px;
+	margin-top: 5px;
+	cursor: pointer;
+	transition: all 0.2s;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+.canvas-card:hover {
+	border-color: #3f51b5;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+.canvas-header {
+	font-weight: bold;
+	color: #1a237e;
+	margin-bottom: 5px;
+	display: flex;
+	align-items: center;
+	gap: 5px;
+}
+.canvas-details {
+	font-size: 12px;
+	color: #666;
+}
 .canvas-card.applied {
-	opacity: 0.8;
+	background-color: #e8f5e9;
+	border-color: #4caf50;
 	cursor: default;
 }
 
 /* 添加思考过程消息的样式 */
 .chat-message.thinking {
 	background-color: rgba(158, 158, 158, 0.1);
-    border: 1px solid #ddd;
-    font-size: 13px;
-    font-style: italic;
-    border-radius: 10px;
-    color: #616161;
+	border: 1px solid #ddd;
+	font-size: 13px;
+	font-style: italic;
+	border-radius: 10px;
+	color: #616161;
 }

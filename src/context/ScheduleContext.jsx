@@ -35,9 +35,11 @@ export const ScheduleProvider = ({ children }) => {
 	const [monthlyData, setMonthlyData] = useState({});
 	const [highlightedTaskType, setHighlightedTaskType] = useState(null);
 	const [chatMessages, setChatMessages] = useState([{ type: 'model', content: '你好！你可以向我提问或发出指令。点击 "?" 查看样例。' }]);
+	const [schedulingContext, setSchedulingContext] = useState(null); // 新增schedulingContext状态
 	const [TASK_DEFS, setTaskDefs] = useState({});
 	const [VEHICLES, setVehicles] = useState([]);
 	const [TASK_CATEGORIES, setTaskCategories] = useState([]);
+	const [isClickCanvasCard, setIsClickCanvasCard] = useState(false);// 是否点击预排结果卡片，点击卡片对应年月数据不走接口
 
 	// 移除预排功能相关状态
 
@@ -82,18 +84,23 @@ export const ScheduleProvider = ({ children }) => {
 	// 初始化数据
 	useEffect(() => {
 		if (Object.keys(TASK_DEFS).length > 0 && VEHICLES.length > 0 && TASK_CATEGORIES.length > 0) {
-			loadAnnualData(currentYear);
+			// 点击预排结果卡片，不加载年度数据
+			if (!isClickCanvasCard) {
+				loadAnnualData(currentYear);
+			}
 		}
-	}, [currentYear, TASK_DEFS, VEHICLES, TASK_CATEGORIES]);
+	}, [currentYear, TASK_DEFS, VEHICLES, TASK_CATEGORIES, isClickCanvasCard]);
 
 	// 当切换月份时加载月度数据
 	useEffect(() => {
 		if (currentMonth !== null && Object.keys(annualData).length > 0) {
-			console.log('currentMonth', currentMonth);
-
-			loadMonthlyData(currentYear, currentMonth);
+			// 点击预排结果卡片，不加载月度数据
+			if (!isClickCanvasCard) {
+				console.log('currentMonth', currentMonth);
+				loadMonthlyData(currentYear, currentMonth);
+			}
 		}
-	}, [currentMonth, annualData, currentYear]);
+	}, [currentMonth, annualData, currentYear, isClickCanvasCard]);
 
 	// 转换年度数据（对象数组 -> 组件需要的格式）
 	const transformAnnualData = (annualTasks) => {
@@ -185,8 +192,6 @@ export const ScheduleProvider = ({ children }) => {
 					def: task.taskDef, // 使用第一个任务的def作为代表性定义
 				};
 			}
-
-			console.log('data.dailyManHours', data.dailyManHours, task.day);
 
 			// data.dailyManHours[task.day][task.taskType] += task.manHours;
 			// data.vehicleSummary[task.vehicle][task.taskType]++;
@@ -480,43 +485,106 @@ export const ScheduleProvider = ({ children }) => {
 
 				response = `当前视图中最繁忙的${periodText}是 ${busiestPeriod}，总工时约为 ${maxHours.toFixed(2)} 小时。`;
 			}
-			// 预排计划命令 - 修改为调用TopToolbar中的预排功能
+			// 初始预排计划命令
 			else if (text.includes('预排') || text.includes('先排') || text.includes('只排')) {
 				setHighlightedTaskType(null); // 取消高亮
-				// 提取年份和月份信息
-				const yearMatch = text.match(/(\d{4})年/);
-				const monthMatch = text.match(/(\d{1,2})月/);
-				const year = yearMatch ? parseInt(yearMatch[1], 10) : currentYear;
-				const month = monthMatch ? parseInt(monthMatch[1], 10) - 1 : -1;
+				// 使用正则表达式提取信息，与demo保持一致
+				const preScheduleMatch = text.match(/(预排|先排|只排)(\d{4}年)?(\d{1,2}月)?(的)?(均衡修|特别修|专项修)/);
 
-				// 添加可视化卡片（在LLMChatPanel中处理）
-				const canvasContent = `
-				<div class="canvas-card" data-action="预排计划" data-year="${year}" data-month="${month}">
-				<div class="canvas-header">${year}年${month > -1 ? month + 1 + '月' : ''}预排计划</div>
-				<div class="canvas-content">
-				<p>请点击顶部工具栏的"预排年计划"或"预排月计划"按钮生成计划</p>
-				<p>生成后可应用到主界面</p>
-				</div>
-				</div>
-				`;
-				response = canvasContent;
+				if (preScheduleMatch) {
+					// 提取年份、月份和任务类型
+					const year = preScheduleMatch[2] ? preScheduleMatch[2].replace('年', '') : currentYear;
+					const month = preScheduleMatch[3] ? parseInt(preScheduleMatch[3].replace('月', ''), 10) - 1 : -1;
+					const type = preScheduleMatch[5];
+
+					// 设置排程上下文
+					setSchedulingContext({ year, month, scheduledTypes: [type] });
+
+					// 添加可视化卡片
+					const canvasContent = `
+						<div class="canvas-card" data-action="apply-plan" data-year="${year}" data-month="${month}" data-types="${type}">
+						<div class="canvas-header">${year}年${month > -1 ? month + 1 + '月' : ''}预排计划</div>
+						<div class="canvas-content">
+						<p>已选择任务类型: ${type}</p>
+						<p>请点击顶部工具栏的"预排年计划"或"预排月计划"按钮生成计划</p>
+						<p>您也可以使用"再排XXX"指令继续添加其他任务类型</p>
+						<p>生成后可应用到主界面</p>
+						</div>
+						</div>
+						`;
+					response = canvasContent;
+				} else {
+					// 如果正则匹配失败，使用原来的逻辑作为后备
+					const yearMatch = text.match(/(\d{4})年/);
+					const monthMatch = text.match(/(\d{1,2})月/);
+					const year = yearMatch ? parseInt(yearMatch[1], 10) : currentYear;
+					const month = monthMatch ? parseInt(monthMatch[1], 10) - 1 : -1;
+
+					const canvasContent = `
+						<div class="canvas-card" data-action="apply-plan" data-year="${year}" data-month="${month}">
+						<div class="canvas-header">${year}年${month > -1 ? month + 1 + '月' : ''}预排计划</div>
+						<div class="canvas-content">
+						<p>请点击顶部工具栏的"预排年计划"或"预排月计划"按钮生成计划</p>
+						<p>生成后可应用到主界面</p>
+						</div>
+						</div>
+						`;
+					response = canvasContent;
+				}
 			}
-			// 导入数据命令
+			// 分步排程 - 后续排程
+			else if (/^(再排|然后排|接着排|继续排)/.test(text) && schedulingContext) {
+				setHighlightedTaskType(null); // 取消高亮
+				// 提取任务类型
+				const typeMatch = text.match(/(均衡修|特别修|专项修)/);
+				if (typeMatch) {
+					const newType = typeMatch[1];
+					const { year, month, scheduledTypes } = schedulingContext;
+
+					if (scheduledTypes.includes(newType)) {
+						response = `"${newType}" 已经包含在当前的排程计划中了。`;
+					} else {
+						const newTypes = [...scheduledTypes, newType];
+						setSchedulingContext({ year, month, scheduledTypes: newTypes });
+
+						// 更新可视化卡片
+						const canvasContent = `
+							<div class="canvas-card" data-action="apply-plan" data-year="${year}" data-month="${month}" data-types="${newTypes.join(',')}">
+							<div class="canvas-header">
+							<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 0 24 24" width="20px" fill="#3f51b5"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+							<span>${year}年${month > -1 ? month + 1 + '月' : ''}预排计划</span>
+							</div>
+							<div class="canvas-content">
+							<p>已选择任务类型: ${newTypes.join('、')}</p>
+							<p>请点击顶部工具栏的"预排年计划"或"预排月计划"按钮生成计划</p>
+							<p>生成后可应用到主界面</p>
+							</div>
+							</div>
+							`;
+						response = canvasContent;
+					}
+				} else {
+					response = '请指定要继续排的任务类型（均衡修、特别修或专项修）';
+				}
+			}
+			// 导入数据命令 - 添加清除schedulingContext的逻辑
 			else if (text.includes('导入数据')) {
+				setSchedulingContext(null); // 导入数据时清除排程上下文
 				const canvasContent = `
-				<div class="canvas-card" data-action="导入数据" data-year="${currentYear}" data-month="${currentMonth}">
-				<div class="canvas-header">数据导入结果</div>
-				<div class="canvas-content">
-				<p>数据导入成功</p>
-				<p>点击此卡片可应用到主界面</p>
-				</div>
-				</div>
-				`;
+					<div class="canvas-card" data-action="导入数据" data-year="${currentYear}" data-month="${currentMonth}">
+					<div class="canvas-header">数据导入结果</div>
+					<div class="canvas-content">
+					<p>数据导入成功</p>
+					<p>点击此卡片可应用到主界面</p>
+					</div>
+					</div>
+					`;
 				response = canvasContent;
 			}
 			// 默认回复
 			else {
 				setHighlightedTaskType(null); // 取消高亮
+				setSchedulingContext(null); // 默认回复时清除
 				response = `抱歉，我暂时无法理解该指令。您可以试试点击 "?" 按钮查看可用指令。`;
 			}
 
@@ -552,8 +620,11 @@ export const ScheduleProvider = ({ children }) => {
 			chatMessages,
 			sendChatMessage,
 			setChatMessages,
+			setIsClickCanvasCard,
+			schedulingContext, // 新增
+        setSchedulingContext, // 新增
 		}),
-		[currentYear, currentMonth, currentView, annualData, monthlyData, transformAnnualData, transformMonthlyData, highlightedTaskType, chatMessages]
+		[currentYear, currentMonth, currentView, annualData, monthlyData, transformAnnualData, transformMonthlyData, highlightedTaskType, chatMessages, schedulingContext]
 	);
 
 	return (

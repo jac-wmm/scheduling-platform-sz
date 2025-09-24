@@ -4,12 +4,13 @@ import InfoPanel from '../../common/InfoPanel';
 import './index.css';
 
 const ControlsPanel = ({ currentView, setCurrentView }) => {
-	const { currentYear, currentMonth, setCurrentYear, setCurrentMonth, annualData, setHighlightedTaskType } = useContext(ScheduleContext);
+	const { currentYear, currentMonth, setCurrentYear, setCurrentMonth, annualData, setHighlightedTaskType,setIsClickCanvasCard } = useContext(ScheduleContext);
 
 	const [showYearSelector, setShowYearSelector] = useState(false);
 
 	// 切换年份
 	const changeYear = (direction) => {
+		setIsClickCanvasCard(false);
 		setCurrentYear((prev) => prev + direction);
 	};
 
@@ -75,7 +76,10 @@ const ControlsPanel = ({ currentView, setCurrentView }) => {
 					</button>
 					<button
 						id='change-year-btn'
-						onClick={() => setShowYearSelector(true)}
+						onClick={() => {
+							setShowYearSelector(true);
+							setIsClickCanvasCard(false);
+						}}
 					>
 						{currentYear}年
 					</button>
